@@ -1,0 +1,113 @@
+
+<h2 class="sr-only">商业化KOL合作排行，共122位，最高合作3次，展示频次前10位及品牌关联</h2>
+<style>
+*{box-sizing:border-box}
+.pg{padding:.75rem 0;font-family:var(--font-sans)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.stat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
+.stat-n{font-size:22px;font-weight:500;color:var(--color-text-primary);line-height:1.1}
+.stat-l{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.sec-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.04em}
+.kol-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.kol-row:last-child{border-bottom:none}
+.kol-rank{font-size:11px;color:var(--color-text-secondary);width:20px;flex-shrink:0;text-align:right}
+.kol-name{font-size:13px;font-weight:500;color:var(--color-text-primary);width:80px;flex-shrink:0}
+.kol-bar-wrap{flex:1;display:flex;align-items:center;gap:6px}
+.kol-bar{height:6px;border-radius:3px;background:#534AB7}
+.kol-cnt{font-size:12px;font-weight:500;color:var(--color-text-primary);width:20px;flex-shrink:0}
+.pills{display:flex;flex-wrap:wrap;gap:4px;flex:2}
+.pill{font-size:10px;font-weight:500;border-radius:3px;padding:2px 6px;white-space:nowrap}
+.note{font-size:11px;color:var(--color-text-secondary);margin-top:4px}
+.drug-group{margin-bottom:12px}
+.drug-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.drug-name-badge{font-size:11px;font-weight:500;border-radius:3px;padding:2px 8px}
+.drug-kols{display:flex;flex-wrap:wrap;gap:4px}
+.kol-tag{font-size:11px;border-radius:3px;padding:2px 6px;background:var(--color-background-secondary);color:var(--color-text-secondary)}
+</style>
+
+<div class="pg">
+
+<div class="stats">
+  <div class="stat"><div class="stat-n">122</div><div class="stat-l">商业化合作KOL总数</div></div>
+  <div class="stat"><div class="stat-n">3</div><div class="stat-l">最高合作频次上限</div></div>
+  <div class="stat"><div class="stat-n">91%</div><div class="stat-l">KOL仅合作1次占比</div></div>
+</div>
+
+<div class="sec-title">合作频次 2次及以上 KOL排行</div>
+
+<div id="top-list"></div>
+
+<div class="sec-title" style="margin-top:20px">合作频次 1次 KOL — 按品牌聚合</div>
+<div class="note" style="margin-bottom:12px">112位KOL仅出现1次，按所合作药品分组展示</div>
+<div id="drug-groups"></div>
+
+</div>
+
+<script>
+const DRUG_COLORS = {
+  '氘可来昔替尼': {bg:'#FAEEDA',text:'#854F0B'},
+  '阿布昔替尼':   {bg:'#E6F1FB',text:'#0C447C'},
+  '替瑞奇珠单抗': {bg:'#E1F5EE',text:'#085041'},
+  '匹康奇拜单抗': {bg:'#EEEDFE',text:'#3C3489'},
+  '度普利尤单抗': {bg:'#FAECE7',text:'#712B13'},
+  '司普奇拜单抗': {bg:'#FBEAF0',text:'#72243E'},
+  '赛立奇单抗':   {bg:'#EAF3DE',text:'#27500A'},
+  '司库奇尤单抗': {bg:'#F1EFE8',text:'#444441'},
+  '乌帕替尼':     {bg:'#FCEBEB',text:'#791F1F'},
+};
+function drugPill(name, count){
+  const c = DRUG_COLORS[name] || {bg:'#F1EFE8',text:'#444441'};
+  const cnt = count > 1 ? `×${count}` : '';
+  return `<span class="pill" style="background:${c.bg};color:${c.text}">${name}${cnt}</span>`;
+}
+
+const TOP = [
+  {rank:1, name:'陈柳青', total:3, drugs:[{name:'匹康奇拜单抗',count:2},{name:'替瑞奇珠单抗',count:1},{name:'司库奇尤单抗',count:1},{name:'古塞奇尤单抗',count:1}]},
+  {rank:2, name:'孟昭影', total:2, drugs:[{name:'替瑞奇珠单抗',count:2},{name:'阿达木单抗',count:1}]},
+  {rank:2, name:'吴佳纹', total:2, drugs:[{name:'司普奇拜单抗',count:2}]},
+  {rank:2, name:'郝飞',   total:2, drugs:[{name:'匹康奇拜单抗',count:2},{name:'替瑞奇珠单抗',count:1}]},
+  {rank:2, name:'张士发', total:2, drugs:[{name:'匹康奇拜单抗',count:2},{name:'司库奇尤单抗',count:1}]},
+  {rank:2, name:'程能能', total:2, drugs:[{name:'匹康奇拜单抗',count:2},{name:'依奇珠单抗',count:1}]},
+  {rank:2, name:'禚风麟', total:2, drugs:[{name:'匹康奇拜单抗',count:2},{name:'古塞奇尤单抗',count:1}]},
+  {rank:2, name:'陶小华', total:2, drugs:[{name:'匹康奇拜单抗',count:2},{name:'替瑞奇珠单抗',count:1}]},
+  {rank:2, name:'邓丹琪', total:2, drugs:[{name:'匹康奇拜单抗',count:2},{name:'依奇珠单抗',count:1}]},
+  {rank:2, name:'王晓阳', total:2, drugs:[{name:'匹康奇拜单抗',count:2},{name:'古塞奇尤单抗',count:1}]},
+];
+
+const list = document.getElementById('top-list');
+TOP.forEach((k,i) => {
+  const barW = Math.round(k.total/3*100);
+  const pills = k.drugs.map(d => drugPill(d.name, d.count)).join('');
+  list.innerHTML += `<div class="kol-row">
+    <span class="kol-rank">${k.rank}</span>
+    <span class="kol-name">${k.name}</span>
+    <div class="kol-bar-wrap">
+      <div class="kol-bar" style="width:${barW}%"></div>
+      <span class="kol-cnt">${k.total}次</span>
+    </div>
+    <div class="pills">${pills}</div>
+  </div>`;
+});
+
+const DRUG_GROUPS = [
+  {drug:'氘可来昔替尼', kols:['宋颖教授','高雨歌教授','冷静教授','张建波教授','谷盛莲教授','关欣','耿松梅','满孝勇','李斌','白宇','慕彰磊','李承旭','许晓春','王福喜','苏忠兰','许文嵘','陈小建','王丹','李厚敏','刘盛秀','姜晓勇','林秉奖','徐田红','梁燕华','蒋冠','游弋','兰海梅','谢倩','王爱平','王磊','张荣鑫','李欣教授','郭志丽教授','朱慧琴教授','戴尔红教授','汪洁教授']},
+  {drug:'赛立奇单抗', kols:['吴文育','文翔','樊平申','苏红','吴亚光','王慧娟','任世菊','郑羽宇','后俊生','多丽娜','赖沙','朱雅琳']},
+  {drug:'乌帕替尼', kols:['张建中','郑敏','Christopher G. Bunick','Alan D. Irvine','Silverberg JI','Guttman-Yassky E']},
+  {drug:'阿布昔替尼', kols:['郑松','耿龙','满春花','苏玩琴','高薇','徐春兴','凌磊','郑文军','赵作涛','高兴华','张丽','房洁','谭希','伍洲炜']},
+  {drug:'度普利尤单抗', kols:['高明阳教授','李智铭教授','张国强教授','林立航教授','姜晓勇教授','吴志强教授','周治平教授']},
+  {drug:'司普奇拜单抗', kols:['肖生祥','张天啸','梁云生教授','粟娟教授','陈岚教授','陈金波教授']},
+];
+
+const grps = document.getElementById('drug-groups');
+DRUG_GROUPS.forEach(g => {
+  const c = DRUG_COLORS[g.drug] || {bg:'#F1EFE8',text:'#444441'};
+  const tags = g.kols.map(k => `<span class="kol-tag">${k}</span>`).join('');
+  grps.innerHTML += `<div class="drug-group">
+    <div class="drug-head">
+      <span class="drug-name-badge" style="background:${c.bg};color:${c.text}">${g.drug}</span>
+      <span style="font-size:11px;color:var(--color-text-secondary)">${g.kols.length}位专家</span>
+    </div>
+    <div class="drug-kols">${tags}</div>
+  </div>`;
+});
+</script>
