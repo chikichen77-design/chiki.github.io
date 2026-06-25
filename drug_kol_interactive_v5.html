@@ -1,0 +1,152 @@
+
+<h2 class="sr-only">可交互商业化药品与KOL合作二分图，KOL按被关联药品次数降序排列</h2>
+<style>
+*{box-sizing:border-box}
+.wrap{padding:.5rem 0;font-family:var(--font-sans)}
+.hint{font-size:11px;color:var(--color-text-secondary);margin-bottom:8px}
+.dp{display:none;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:12px 14px;margin-bottom:10px}
+.dp.show{display:block}
+.dp-hd{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.dp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dp-name{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.dp-sub{font-size:11px;color:var(--color-text-secondary);margin-left:auto}
+.dp-x{font-size:14px;color:var(--color-text-secondary);cursor:pointer;padding:0 4px;line-height:1}
+.dp-grid{display:flex;flex-wrap:wrap;gap:5px}
+.dp-tag{font-size:10px;font-weight:500;border-radius:3px;padding:2px 7px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.dp-tag:hover{opacity:.75}
+.cnt-badge{background:rgba(0,0,0,.13);border-radius:2px;padding:1px 4px;font-size:9px;font-weight:500}
+.leg{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.li{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--color-text-secondary)}
+.ls{width:7px;height:7px;border-radius:1px;flex-shrink:0}
+</style>
+
+<div class="wrap">
+  <p class="hint">点击<strong>药品</strong>或<strong>KOL</strong>节点 · 右侧KOL标注被关联药品次数 · 粗线=合作2次 · 再次点击或×取消</p>
+  <div class="dp" id="dp">
+    <div class="dp-hd">
+      <span class="dp-dot" id="dp-dot"></span>
+      <span class="dp-name" id="dp-name"></span>
+      <span class="dp-sub" id="dp-sub"></span>
+      <span class="dp-x" id="dp-x">✕</span>
+    </div>
+    <div class="dp-grid" id="dp-grid"></div>
+  </div>
+  <div class="leg" id="leg"></div>
+  <svg id="bp" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;overflow:visible"></svg>
+</div>
+
+<script>
+const DRUGS=[
+  {n:'氘可来昔替尼',kc:43},{n:'阿布昔替尼',kc:20},{n:'度普利尤单抗',kc:20},
+  {n:'替瑞奇珠单抗',kc:13},{n:'乌帕替尼',kc:12},{n:'赛立奇单抗',kc:12},
+  {n:'古塞奇尤单抗',kc:11},{n:'匹康奇拜单抗',kc:9},{n:'司库奇尤单抗',kc:9},
+  {n:'依奇珠单抗',kc:8},{n:'司普奇拜单抗',kc:7},{n:'硫酸艾玛昔替尼',kc:7},
+  {n:'利特昔替尼',kc:6},{n:'克立硼罗',kc:3},{n:'他克莫司',kc:2},
+  {n:'依若奇单抗',kc:1},{n:'阿达木单抗',kc:1},{n:'依那西普',kc:1},{n:'夫那奇珠单抗',kc:1}
+];
+const KOLS=[
+  {n:'孟昭影',t:6},{n:'郝飞',t:6},{n:'陈柳青',t:6},{n:'张士发',t:6},{n:'程能能',t:6},{n:'禚风麟',t:6},{n:'陶小华',t:6},{n:'邓丹琪',t:6},{n:'王晓阳',t:6},
+  {n:'张建中',t:5},{n:'郑敏',t:5},{n:'尚元元',t:5},{n:'谭丽娜',t:5},{n:'张斌',t:5},{n:'贾虹',t:5},
+  {n:'夏雨',t:3},{n:'满春花',t:3},{n:'苏玩琴',t:3},
+  {n:'王晓华',t:2},{n:'吴佳纹',t:2},{n:'凌磊',t:2},{n:'郑文军',t:2},{n:'赵作涛',t:2},{n:'高兴华',t:2},{n:'张丽',t:2},{n:'谭希',t:2},{n:'伍洲炜',t:2},
+  {n:'张振颖',t:1},{n:'宋颖教授',t:1},{n:'高雨歌教授',t:1},{n:'冷静教授',t:1},{n:'张建波教授',t:1},{n:'谷盛莲教授',t:1},{n:'关欣',t:1},{n:'许晓春',t:1},{n:'李承旭',t:1},{n:'慕彰磊',t:1},{n:'白宇',t:1},{n:'李斌',t:1},{n:'郑松',t:1},{n:'耿龙',t:1},{n:'耿松梅',t:1},{n:'满孝勇',t:1},{n:'王福喜',t:1},{n:'苏忠兰',t:1},{n:'许文嵘',t:1},{n:'陈小建',t:1},{n:'王丹',t:1},{n:'李厚敏',t:1},{n:'刘盛秀',t:1},{n:'姜晓勇',t:1},{n:'林秉奖',t:1},{n:'徐田红',t:1},{n:'Christopher G. Bunick',t:1},{n:'Alan D. Irvine',t:1},{n:'Silverberg JI',t:1},{n:'Guttman-Yassky E',t:1},{n:'Shahriari M',t:1},{n:'Gao X',t:1},{n:'肖生祥',t:1},{n:'张天啸',t:1},{n:'高明阳教授',t:1},{n:'李智铭教授',t:1},{n:'张国强教授',t:1},{n:'林立航教授',t:1},{n:'姜晓勇教授',t:1},{n:'吴志强教授',t:1},{n:'周治平教授',t:1},{n:'王大虎',t:1},{n:'李欣教授',t:1},{n:'郭志丽教授',t:1},{n:'朱慧琴教授',t:1},{n:'戴尔红教授',t:1},{n:'汪洁教授',t:1},{n:'徐楠',t:1},{n:'王刚',t:1},{n:'梁燕华',t:1},{n:'蒋冠',t:1},{n:'游弋',t:1},{n:'兰海梅',t:1},{n:'谢倩',t:1},{n:'吴文育',t:1},{n:'文翔',t:1},{n:'樊平申',t:1},{n:'苏红',t:1},{n:'吴亚光',t:1},{n:'王慧娟',t:1},{n:'任世菊',t:1},{n:'郑羽宇',t:1},{n:'后俊生',t:1},{n:'多丽娜',t:1},{n:'赖沙',t:1},{n:'朱雅琳',t:1},{n:'王爱平',t:1},{n:'王磊',t:1},{n:'张荣鑫',t:1},{n:'郝玉琴',t:1},{n:'尚盼盼',t:1},{n:'高薇',t:1},{n:'徐春兴',t:1},{n:'丁杨峰',t:1},{n:'梁云生教授',t:1},{n:'粟娟教授',t:1},{n:'陈岚教授',t:1},{n:'陈金波教授',t:1},{n:'李永喜',t:1},{n:'王苗苗',t:1},{n:'范志国',t:1},{n:'颜潇潇',t:1},{n:'张媛',t:1},{n:'房洁',t:1},{n:'孙毅',t:1}
+];
+const LINKS=[
+  {d:'氘可来昔替尼',k:'宋颖教授',c:1},{d:'氘可来昔替尼',k:'高雨歌教授',c:1},{d:'氘可来昔替尼',k:'冷静教授',c:1},{d:'氘可来昔替尼',k:'张建波教授',c:1},{d:'氘可来昔替尼',k:'谷盛莲教授',c:1},{d:'氘可来昔替尼',k:'关欣',c:1},{d:'氘可来昔替尼',k:'许晓春',c:1},{d:'氘可来昔替尼',k:'李承旭',c:1},{d:'氘可来昔替尼',k:'慕彰磊',c:1},{d:'氘可来昔替尼',k:'白宇',c:1},{d:'氘可来昔替尼',k:'李斌',c:1},{d:'氘可来昔替尼',k:'耿松梅',c:1},{d:'氘可来昔替尼',k:'满孝勇',c:1},{d:'氘可来昔替尼',k:'王福喜',c:1},{d:'氘可来昔替尼',k:'苏忠兰',c:1},{d:'氘可来昔替尼',k:'许文嵘',c:1},{d:'氘可来昔替尼',k:'陈小建',c:1},{d:'氘可来昔替尼',k:'王丹',c:1},{d:'氘可来昔替尼',k:'李厚敏',c:1},{d:'氘可来昔替尼',k:'刘盛秀',c:1},{d:'氘可来昔替尼',k:'姜晓勇',c:1},{d:'氘可来昔替尼',k:'林秉奖',c:1},{d:'氘可来昔替尼',k:'徐田红',c:1},{d:'氘可来昔替尼',k:'李欣教授',c:1},{d:'氘可来昔替尼',k:'郭志丽教授',c:1},{d:'氘可来昔替尼',k:'朱慧琴教授',c:1},{d:'氘可来昔替尼',k:'戴尔红教授',c:1},{d:'氘可来昔替尼',k:'汪洁教授',c:1},{d:'氘可来昔替尼',k:'梁燕华',c:1},{d:'氘可来昔替尼',k:'蒋冠',c:1},{d:'氘可来昔替尼',k:'游弋',c:1},{d:'氘可来昔替尼',k:'兰海梅',c:1},{d:'氘可来昔替尼',k:'谢倩',c:1},{d:'氘可来昔替尼',k:'王爱平',c:1},{d:'氘可来昔替尼',k:'王磊',c:1},{d:'氘可来昔替尼',k:'张荣鑫',c:1},{d:'氘可来昔替尼',k:'郝玉琴',c:1},{d:'氘可来昔替尼',k:'尚盼盼',c:1},{d:'氘可来昔替尼',k:'李永喜',c:1},{d:'氘可来昔替尼',k:'王苗苗',c:1},{d:'氘可来昔替尼',k:'范志国',c:1},{d:'氘可来昔替尼',k:'颜潇潇',c:1},{d:'氘可来昔替尼',k:'张媛',c:1},
+  {d:'阿布昔替尼',k:'郑松',c:1},{d:'阿布昔替尼',k:'耿龙',c:1},{d:'阿布昔替尼',k:'满春花',c:1},{d:'阿布昔替尼',k:'苏玩琴',c:1},{d:'阿布昔替尼',k:'凌磊',c:1},{d:'阿布昔替尼',k:'郑文军',c:1},{d:'阿布昔替尼',k:'赵作涛',c:1},{d:'阿布昔替尼',k:'高兴华',c:1},{d:'阿布昔替尼',k:'张丽',c:1},{d:'阿布昔替尼',k:'谭希',c:1},{d:'阿布昔替尼',k:'伍洲炜',c:1},{d:'阿布昔替尼',k:'高薇',c:1},{d:'阿布昔替尼',k:'徐春兴',c:1},{d:'阿布昔替尼',k:'房洁',c:1},{d:'阿布昔替尼',k:'张建中',c:1},{d:'阿布昔替尼',k:'郑敏',c:1},{d:'阿布昔替尼',k:'尚元元',c:1},{d:'阿布昔替尼',k:'谭丽娜',c:1},{d:'阿布昔替尼',k:'张斌',c:1},{d:'阿布昔替尼',k:'贾虹',c:1},
+  {d:'度普利尤单抗',k:'满春花',c:1},{d:'度普利尤单抗',k:'苏玩琴',c:1},{d:'度普利尤单抗',k:'凌磊',c:1},{d:'度普利尤单抗',k:'郑文军',c:1},{d:'度普利尤单抗',k:'赵作涛',c:1},{d:'度普利尤单抗',k:'高兴华',c:1},{d:'度普利尤单抗',k:'张丽',c:1},{d:'度普利尤单抗',k:'高明阳教授',c:1},{d:'度普利尤单抗',k:'李智铭教授',c:1},{d:'度普利尤单抗',k:'张国强教授',c:1},{d:'度普利尤单抗',k:'林立航教授',c:1},{d:'度普利尤单抗',k:'姜晓勇教授',c:1},{d:'度普利尤单抗',k:'吴志强教授',c:1},{d:'度普利尤单抗',k:'周治平教授',c:1},{d:'度普利尤单抗',k:'张建中',c:1},{d:'度普利尤单抗',k:'郑敏',c:1},{d:'度普利尤单抗',k:'尚元元',c:1},{d:'度普利尤单抗',k:'谭丽娜',c:1},{d:'度普利尤单抗',k:'张斌',c:1},{d:'度普利尤单抗',k:'贾虹',c:1},
+  {d:'替瑞奇珠单抗',k:'夏雨',c:1},{d:'替瑞奇珠单抗',k:'王晓华',c:1},{d:'替瑞奇珠单抗',k:'孟昭影',c:2},{d:'替瑞奇珠单抗',k:'王刚',c:1},{d:'替瑞奇珠单抗',k:'丁杨峰',c:1},{d:'替瑞奇珠单抗',k:'郝飞',c:1},{d:'替瑞奇珠单抗',k:'陈柳青',c:1},{d:'替瑞奇珠单抗',k:'张士发',c:1},{d:'替瑞奇珠单抗',k:'程能能',c:1},{d:'替瑞奇珠单抗',k:'禚风麟',c:1},{d:'替瑞奇珠单抗',k:'陶小华',c:1},{d:'替瑞奇珠单抗',k:'王晓阳',c:1},{d:'替瑞奇珠单抗',k:'邓丹琪',c:1},
+  {d:'乌帕替尼',k:'Christopher G. Bunick',c:1},{d:'乌帕替尼',k:'Alan D. Irvine',c:1},{d:'乌帕替尼',k:'Silverberg JI',c:1},{d:'乌帕替尼',k:'Guttman-Yassky E',c:1},{d:'乌帕替尼',k:'Shahriari M',c:1},{d:'乌帕替尼',k:'Gao X',c:1},{d:'乌帕替尼',k:'张建中',c:1},{d:'乌帕替尼',k:'郑敏',c:1},{d:'乌帕替尼',k:'尚元元',c:1},{d:'乌帕替尼',k:'谭丽娜',c:1},{d:'乌帕替尼',k:'张斌',c:1},{d:'乌帕替尼',k:'贾虹',c:1},
+  {d:'赛立奇单抗',k:'吴文育',c:1},{d:'赛立奇单抗',k:'文翔',c:1},{d:'赛立奇单抗',k:'樊平申',c:1},{d:'赛立奇单抗',k:'苏红',c:1},{d:'赛立奇单抗',k:'吴亚光',c:1},{d:'赛立奇单抗',k:'王慧娟',c:1},{d:'赛立奇单抗',k:'任世菊',c:1},{d:'赛立奇单抗',k:'郑羽宇',c:1},{d:'赛立奇单抗',k:'后俊生',c:1},{d:'赛立奇单抗',k:'多丽娜',c:1},{d:'赛立奇单抗',k:'赖沙',c:1},{d:'赛立奇单抗',k:'朱雅琳',c:1},
+  {d:'古塞奇尤单抗',k:'夏雨',c:1},{d:'古塞奇尤单抗',k:'王晓华',c:1},{d:'古塞奇尤单抗',k:'王大虎',c:1},{d:'古塞奇尤单抗',k:'郝飞',c:1},{d:'古塞奇尤单抗',k:'陈柳青',c:1},{d:'古塞奇尤单抗',k:'张士发',c:1},{d:'古塞奇尤单抗',k:'程能能',c:1},{d:'古塞奇尤单抗',k:'禚风麟',c:1},{d:'古塞奇尤单抗',k:'陶小华',c:1},{d:'古塞奇尤单抗',k:'王晓阳',c:1},{d:'古塞奇尤单抗',k:'邓丹琪',c:1},
+  {d:'匹康奇拜单抗',k:'夏雨',c:1},{d:'匹康奇拜单抗',k:'郝飞',c:2},{d:'匹康奇拜单抗',k:'陈柳青',c:2},{d:'匹康奇拜单抗',k:'张士发',c:2},{d:'匹康奇拜单抗',k:'程能能',c:2},{d:'匹康奇拜单抗',k:'禚风麟',c:2},{d:'匹康奇拜单抗',k:'陶小华',c:2},{d:'匹康奇拜单抗',k:'邓丹琪',c:2},{d:'匹康奇拜单抗',k:'王晓阳',c:2},
+  {d:'司库奇尤单抗',k:'孟昭影',c:1},{d:'司库奇尤单抗',k:'郝飞',c:1},{d:'司库奇尤单抗',k:'陈柳青',c:1},{d:'司库奇尤单抗',k:'张士发',c:1},{d:'司库奇尤单抗',k:'程能能',c:1},{d:'司库奇尤单抗',k:'禚风麟',c:1},{d:'司库奇尤单抗',k:'陶小华',c:1},{d:'司库奇尤单抗',k:'王晓阳',c:1},{d:'司库奇尤单抗',k:'邓丹琪',c:1},
+  {d:'依奇珠单抗',k:'郝飞',c:1},{d:'依奇珠单抗',k:'陈柳青',c:1},{d:'依奇珠单抗',k:'张士发',c:1},{d:'依奇珠单抗',k:'程能能',c:1},{d:'依奇珠单抗',k:'禚风麟',c:1},{d:'依奇珠单抗',k:'陶小华',c:1},{d:'依奇珠单抗',k:'王晓阳',c:1},{d:'依奇珠单抗',k:'邓丹琪',c:1},
+  {d:'司普奇拜单抗',k:'吴佳纹',c:2},{d:'司普奇拜单抗',k:'肖生祥',c:1},{d:'司普奇拜单抗',k:'张天啸',c:1},{d:'司普奇拜单抗',k:'梁云生教授',c:1},{d:'司普奇拜单抗',k:'粟娟教授',c:1},{d:'司普奇拜单抗',k:'陈岚教授',c:1},{d:'司普奇拜单抗',k:'陈金波教授',c:1},
+  {d:'硫酸艾玛昔替尼',k:'张建中',c:1},{d:'硫酸艾玛昔替尼',k:'郑敏',c:1},{d:'硫酸艾玛昔替尼',k:'尚元元',c:1},{d:'硫酸艾玛昔替尼',k:'谭丽娜',c:1},{d:'硫酸艾玛昔替尼',k:'张斌',c:1},{d:'硫酸艾玛昔替尼',k:'贾虹',c:1},{d:'硫酸艾玛昔替尼',k:'孙毅',c:1},
+  {d:'利特昔替尼',k:'张建中',c:1},{d:'利特昔替尼',k:'郑敏',c:1},{d:'利特昔替尼',k:'尚元元',c:1},{d:'利特昔替尼',k:'谭丽娜',c:1},{d:'利特昔替尼',k:'张斌',c:1},{d:'利特昔替尼',k:'贾虹',c:1},
+  {d:'克立硼罗',k:'孟昭影',c:1},{d:'克立硼罗',k:'谭希',c:1},{d:'克立硼罗',k:'伍洲炜',c:1},
+  {d:'他克莫司',k:'满春花',c:1},{d:'他克莫司',k:'苏玩琴',c:1},
+  {d:'依若奇单抗',k:'张振颖',c:1},{d:'阿达木单抗',k:'孟昭影',c:1},
+  {d:'依那西普',k:'孟昭影',c:1},{d:'夫那奇珠单抗',k:'徐楠',c:1}
+];
+const COL={'氘可来昔替尼':'#EF9F27','阿布昔替尼':'#378ADD','度普利尤单抗':'#D85A30','替瑞奇珠单抗':'#1D9E75','乌帕替尼':'#E24B4A','赛立奇单抗':'#639922','古塞奇尤单抗':'#534AB7','匹康奇拜单抗':'#D4537E','司库奇尤单抗':'#888780','依奇珠单抗':'#B4B2A9','司普奇拜单抗':'#85B7EB','硫酸艾玛昔替尼':'#5DCAA5','利特昔替尼':'#97C459','克立硼罗':'#BA7517','他克莫司':'#993C1D','依若奇单抗':'#993556','阿达木单抗':'#3C3489','依那西普':'#085041','夫那奇珠单抗':'#27500A'};
+
+const W=660,DX=138,KX=W-142,KR=13,NTOP=24;
+const H=KOLS.length*KR+NTOP*2+10,DAREA=H-NTOP*2;
+const dY={},kY={};
+DRUGS.forEach((d,i)=>{dY[d.n]=NTOP+i*(DAREA/(DRUGS.length-1));});
+KOLS.forEach((k,i)=>{kY[k.n]=NTOP+i*KR;});
+
+const ns='http://www.w3.org/2000/svg';
+const svg=document.getElementById('bp');
+svg.setAttribute('height',H); svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML='';
+function mk(t,a,p){const e=document.createElementNS(ns,t);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));if(p)p.appendChild(e);return e;}
+
+mk('text',{x:DX,y:14,'text-anchor':'middle','font-size':'11','font-weight':'500',fill:'var(--color-text-secondary)'},svg).textContent='药品（关联KOL数）';
+mk('text',{x:KX,y:14,'text-anchor':'middle','font-size':'11','font-weight':'500',fill:'var(--color-text-secondary)'},svg).textContent='KOL（被关联次数）';
+
+const pByD={},pByK={};
+LINKS.forEach(l=>{
+  const y1=dY[l.d],y2=kY[l.k]; if(!y1||!y2) return;
+  const col=COL[l.d]||'#888',cx=(DX+KX)/2;
+  const p=mk('path',{d:`M${DX},${y1} C${cx},${y1} ${cx},${y2} ${KX},${y2}`,fill:'none',stroke:col,'stroke-width':l.c>1?2:1,opacity:'0.25'},svg);
+  if(!pByD[l.d])pByD[l.d]=[];pByD[l.d].push({p,l});
+  if(!pByK[l.k])pByK[l.k]=[];pByK[l.k].push({p,l});
+});
+
+DRUGS.forEach(d=>{
+  const y=dY[d.n],col=COL[d.n]||'#888';
+  const g=mk('g',{style:'cursor:pointer'},svg);
+  mk('text',{x:DX-9,y,'text-anchor':'end','font-size':'11',fill:'var(--color-text-primary)','dominant-baseline':'middle'},g).textContent=d.n;
+  mk('circle',{cx:DX,cy:y,r:'5',fill:col},g);
+  mk('text',{x:DX+9,y,'font-size':'9',fill:col,'dominant-baseline':'middle'},g).textContent=d.kc+'位';
+  g.addEventListener('click',()=>onDrug(d.n,col));
+});
+KOLS.forEach(k=>{
+  const y=kY[k.n],hi=k.t>1;
+  const g=mk('g',{style:'cursor:pointer'},svg);
+  mk('circle',{cx:KX,cy:y,r:hi?4:2.5,fill:hi?'#534AB7':'#B4B2A9'},g);
+  mk('text',{x:KX+8,y,'font-size':hi?10:9,fill:hi?'var(--color-text-primary)':'var(--color-text-secondary)','dominant-baseline':'middle'},g).textContent=k.n+(k.t>1?' ×'+k.t:'');
+  g.addEventListener('click',()=>onKol(k.n,k.t));
+});
+
+let sel=null;
+function resetAll(){
+  Object.values(pByD).flat().forEach(({p,l})=>{p.setAttribute('opacity','0.25');p.setAttribute('stroke-width',l.c>1?2:1);});
+  document.getElementById('dp').classList.remove('show'); sel=null;
+}
+function dimAll(){Object.values(pByD).flat().forEach(({p})=>p.setAttribute('opacity','0.03'));}
+
+function showPanel(dot,name,sub,tags){
+  document.getElementById('dp-dot').style.background=dot;
+  document.getElementById('dp-name').textContent=name;
+  document.getElementById('dp-sub').textContent=sub;
+  const grid=document.getElementById('dp-grid'); grid.innerHTML='';
+  tags.forEach(t=>{
+    const el=document.createElement('span'); el.className='dp-tag';
+    el.style.background=t.col+'22'; el.style.color=t.col;
+    el.innerHTML=`${t.label}<span class="cnt-badge">${t.cnt}次</span>`;
+    el.addEventListener('click',t.fn);
+    grid.appendChild(el);
+  });
+  document.getElementById('dp').classList.add('show');
+}
+
+function onDrug(name,col){
+  if(sel===name){resetAll();return;} sel=name; dimAll();
+  (pByD[name]||[]).forEach(({p,l})=>{p.setAttribute('opacity','0.9');p.setAttribute('stroke-width',l.c>1?3:2);});
+  const ls=LINKS.filter(l=>l.d===name);
+  showPanel(col,name,`关联 ${ls.length} 位KOL`,ls.map(l=>({label:l.k,col,cnt:l.c,fn:()=>onKol(l.k,KOLS.find(x=>x.n===l.k)?.t||1)})));
+}
+function onKol(name,total){
+  if(sel==='k:'+name){resetAll();return;} sel='k:'+name; dimAll();
+  (pByK[name]||[]).forEach(({p,l})=>{p.setAttribute('opacity','0.9');p.setAttribute('stroke-width',l.c>1?3:2);});
+  const ls=LINKS.filter(l=>l.k===name);
+  showPanel('#534AB7',name,`被关联 ${total} 次 · 涉及 ${ls.length} 个药品`,ls.map(l=>({label:l.d,col:COL[l.d]||'#888',cnt:l.c,fn:()=>onDrug(l.d,COL[l.d]||'#888')})));
+}
+document.getElementById('dp-x').addEventListener('click',resetAll);
+
+const leg=document.getElementById('leg');
+Object.entries(COL).forEach(([d,c])=>{leg.innerHTML+=`<span class="li"><span class="ls" style="background:${c}"></span>${d}</span>`;});
+</script>
