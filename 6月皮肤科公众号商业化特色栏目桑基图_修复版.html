@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>皮肤科公众号商业化特色栏目桑基图</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 24px;
+        }
+        .title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .filter-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 8px 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .filter-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .filter-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        .filter-btn.active:hover {
+            color: white;
+        }
+        #sankey-chart {
+            width: 100%;
+            height: 600px;
+            margin-bottom: 24px;
+        }
+        .rank-charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .rank-card {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .rank-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+        }
+        .bar-chart {
+            width: 100%;
+            height: 500px;
+        }
+        @media (max-width: 768px) {
+            .rank-charts {
+                grid-template-columns: 1fr;
+            }
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 16px;
+            }
+            #sankey-chart {
+                height: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">皮肤科公众号商业化特色栏目流向分析（6月）</div>
+        <div class="filter-buttons" id="filterButtons">
+            <button class="filter-btn active" data-account="全部账号">全部账号</button>
+        </div>
+        <div id="sankey-chart"></div>
+        <div class="rank-charts">
+            <div class="rank-card">
+                <div class="rank-title">栏目月发布频次排名</div>
+                <div id="count-bar" class="bar-chart"></div>
+            </div>
+            <div class="rank-card">
+                <div class="rank-title">栏目单篇平均阅读量排名</div>
+                <div id="read-bar" class="bar-chart"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = {
+    "nodes": [
+        {
+            "name": "优麦会讯",
+            "itemStyle": {
+                "color": "#f97316"
+            },
+            "depth": 0
+        },
+        {
+            "name": "医学界皮肤频道",
+            "itemStyle": {
+                "color": "#10b981"
+            },
+            "depth": 0
+        },
+        {
+            "name": "丁香园皮肤时间",
+            "itemStyle": {
+                "color": "#8b5cf6"
+            },
+            "depth": 0
+        },
+        {
+            "name": "医脉通皮肤科",
+            "itemStyle": {
+                "color": "#3b82f6"
+            },
+            "depth": 0
+        },
+        {
+            "name": "氘可道，例可名",
+            "itemStyle": {
+                "color": "#f97316"
+            },
+            "depth": 1
+        },
+        {
+            "name": "病例小课堂",
+            "itemStyle": {
+                "color": "#f97316"
+            },
+            "depth": 1
+        },
+        {
+            "name": "益起话银屑",
+            "itemStyle": {
+                "color": "#f97316"
+            },
+            "depth": 1
+        },
+        {
+            "name": "领航者对话",
+            "itemStyle": {
+                "color": "#f97316"
+            },
+            "depth": 1
+        },
+        {
+            "name": "面面俱氘",
+            "itemStyle": {
+                "color": "#f97316"
+            },
+            "depth": 1
+        },
+        {
+            "name": "大咖谈",
+            "itemStyle": {
+                "color": "#f97316"
+            },
+            "depth": 1
+        },
+        {
+            "name": "瑞领前沿 毛发新声",
+            "itemStyle": {
+                "color": "#f97316"
+            },
+            "depth": 1
+        },
+        {
+            "name": "超话星期二",
+            "itemStyle": {
+                "color": "#f97316"
+            },
+            "depth": 1
+        },
+        {
+            "name": "一周益见·银领前沿",
+            "itemStyle": {
+                "color": "#10b981"
+            },
+            "depth": 1
+        },
+        {
+            "name": "有倍而来 焕肤新生",
+            "itemStyle": {
+                "color": "#10b981"
+            },
+            "depth": 1
+        },
+        {
+            "name": "有倍而来 焕肤新生",
+            "itemStyle": {
+                "color": "#8b5cf6"
+            },
+            "depth": 1
+        },
+        {
+            "name": "23 实战营 特启新生",
+            "itemStyle": {
+                "color": "#8b5cf6"
+            },
+            "depth": 1
+        },
+        {
+            "name": "愈见，一线必妥",
+            "itemStyle": {
+                "color": "#3b82f6"
+            },
+            "depth": 1
+        },
+        {
+            "name": "学术交流活动",
+            "itemStyle": {
+                "color": "#6b7280"
+            },
+            "depth": 2
+        },
+        {
+            "name": "病例学习",
+            "itemStyle": {
+                "color": "#6b7280"
+            },
+            "depth": 2
+        },
+        {
+            "name": "学术会议报道",
+            "itemStyle": {
+                "color": "#6b7280"
+            },
+            "depth": 2
+        },
+        {
+            "name": "专家访谈",
+            "itemStyle": {
+                "color": "#6b7280"
+            },
+            "depth": 2
+        },
+        {
+            "name": "研究热点解读",
+            "itemStyle": {
+                "color": "#6b7280"
+            },
+            "depth": 2
+        },
+        {
+            "name": "新药进展",
+            "itemStyle": {
+                "color": "#6b7280"
+            },
+            "depth": 2
+        }
+    ],
+    "links": [
+        {
+            "source": "优麦会讯",
+            "target": "氘可道，例可名",
+            "value": 10,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.6
+            }
+        },
+        {
+            "source": "氘可道，例可名",
+            "target": "学术交流活动",
+            "value": 10,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "优麦会讯",
+            "target": "病例小课堂",
+            "value": 4,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.6
+            }
+        },
+        {
+            "source": "病例小课堂",
+            "target": "病例学习",
+            "value": 4,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "优麦会讯",
+            "target": "益起话银屑",
+            "value": 3,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.6
+            }
+        },
+        {
+            "source": "益起话银屑",
+            "target": "学术会议报道",
+            "value": 2,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "益起话银屑",
+            "target": "专家访谈",
+            "value": 1,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "优麦会讯",
+            "target": "领航者对话",
+            "value": 3,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.6
+            }
+        },
+        {
+            "source": "领航者对话",
+            "target": "学术会议报道",
+            "value": 3,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "优麦会讯",
+            "target": "面面俱氘",
+            "value": 1,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.6
+            }
+        },
+        {
+            "source": "面面俱氘",
+            "target": "专家访谈",
+            "value": 1,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "优麦会讯",
+            "target": "大咖谈",
+            "value": 1,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.6
+            }
+        },
+        {
+            "source": "大咖谈",
+            "target": "专家访谈",
+            "value": 1,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "优麦会讯",
+            "target": "瑞领前沿 毛发新声",
+            "value": 1,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.6
+            }
+        },
+        {
+            "source": "瑞领前沿 毛发新声",
+            "target": "学术会议报道",
+            "value": 1,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "优麦会讯",
+            "target": "超话星期二",
+            "value": 1,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.6
+            }
+        },
+        {
+            "source": "超话星期二",
+            "target": "学术交流活动",
+            "value": 1,
+            "lineStyle": {
+                "color": "#f97316",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "医学界皮肤频道",
+            "target": "一周益见·银领前沿",
+            "value": 4,
+            "lineStyle": {
+                "color": "#10b981",
+                "opacity": 0.6
+            }
+        },
+        {
+            "source": "一周益见·银领前沿",
+            "target": "研究热点解读",
+            "value": 2,
+            "lineStyle": {
+                "color": "#10b981",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "一周益见·银领前沿",
+            "target": "新药进展",
+            "value": 2,
+            "lineStyle": {
+                "color": "#10b981",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "医学界皮肤频道",
+            "target": "有倍而来 焕肤新生",
+            "value": 1,
+            "lineStyle": {
+                "color": "#10b981",
+                "opacity": 0.6
+            }
+        },
+        {
+            "source": "有倍而来 焕肤新生",
+            "target": "新药进展",
+            "value": 1,
+            "lineStyle": {
+                "color": "#10b981",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "有倍而来 焕肤新生",
+            "target": "学术交流活动",
+            "value": 1,
+            "lineStyle": {
+                "color": "#10b981",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "丁香园皮肤时间",
+            "target": "有倍而来 焕肤新生",
+            "value": 1,
+            "lineStyle": {
+                "color": "#8b5cf6",
+                "opacity": 0.6
+            }
+        },
+        {
+            "source": "有倍而来 焕肤新生",
+            "target": "新药进展",
+            "value": 1,
+            "lineStyle": {
+                "color": "#8b5cf6",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "有倍而来 焕肤新生",
+            "target": "学术交流活动",
+            "value": 1,
+            "lineStyle": {
+                "color": "#8b5cf6",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "丁香园皮肤时间",
+            "target": "23 实战营 特启新生",
+            "value": 1,
+            "lineStyle": {
+                "color": "#8b5cf6",
+                "opacity": 0.6
+            }
+        },
+        {
+            "source": "23 实战营 特启新生",
+            "target": "病例学习",
+            "value": 1,
+            "lineStyle": {
+                "color": "#8b5cf6",
+                "opacity": 0.4
+            }
+        },
+        {
+            "source": "医脉通皮肤科",
+            "target": "愈见，一线必妥",
+            "value": 1,
+            "lineStyle": {
+                "color": "#3b82f6",
+                "opacity": 0.6
+            }
+        },
+        {
+            "source": "愈见，一线必妥",
+            "target": "学术会议报道",
+            "value": 1,
+            "lineStyle": {
+                "color": "#3b82f6",
+                "opacity": 0.4
+            }
+        }
+    ],
+    "column_info": {
+        "氘可道，例可名": {
+            "发布频次": 10,
+            "平均阅读量": 536
+        },
+        "病例小课堂": {
+            "发布频次": 4,
+            "平均阅读量": 1214
+        },
+        "益起话银屑": {
+            "发布频次": 3,
+            "平均阅读量": 3755
+        },
+        "领航者对话": {
+            "发布频次": 3,
+            "平均阅读量": 2204
+        },
+        "面面俱氘": {
+            "发布频次": 1,
+            "平均阅读量": 3632
+        },
+        "大咖谈": {
+            "发布频次": 1,
+            "平均阅读量": 3575
+        },
+        "瑞领前沿 毛发新声": {
+            "发布频次": 1,
+            "平均阅读量": 3081
+        },
+        "超话星期二": {
+            "发布频次": 1,
+            "平均阅读量": 1589
+        },
+        "一周益见·银领前沿": {
+            "发布频次": 4,
+            "平均阅读量": 4144
+        },
+        "有倍而来 焕肤新生": {
+            "发布频次": 1,
+            "平均阅读量": 10525
+        },
+        "23 实战营 特启新生": {
+            "发布频次": 1,
+            "平均阅读量": 2528
+        },
+        "愈见，一线必妥": {
+            "发布频次": 1,
+            "平均阅读量": 3015
+        }
+    },
+    "column_account_map": {
+        "氘可道，例可名": "优麦会讯",
+        "病例小课堂": "优麦会讯",
+        "益起话银屑": "优麦会讯",
+        "领航者对话": "优麦会讯",
+        "面面俱氘": "优麦会讯",
+        "大咖谈": "优麦会讯",
+        "瑞领前沿 毛发新声": "优麦会讯",
+        "超话星期二": "优麦会讯",
+        "一周益见·银领前沿": "医学界皮肤频道",
+        "有倍而来 焕肤新生": "丁香园皮肤时间",
+        "23 实战营 特启新生": "丁香园皮肤时间",
+        "愈见，一线必妥": "医脉通皮肤科"
+    },
+    "rank_by_count": [
+        {
+            "栏目名称": "氘可道，例可名",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 10,
+            "平均阅读量": 536,
+            "颜色": "#f97316"
+        },
+        {
+            "栏目名称": "一周益见·银领前沿",
+            "所属公众号": "医学界皮肤频道",
+            "月发布频次": 4,
+            "平均阅读量": 4144,
+            "颜色": "#10b981"
+        },
+        {
+            "栏目名称": "病例小课堂",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 4,
+            "平均阅读量": 1214,
+            "颜色": "#f97316"
+        },
+        {
+            "栏目名称": "益起话银屑",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 3,
+            "平均阅读量": 3755,
+            "颜色": "#f97316"
+        },
+        {
+            "栏目名称": "领航者对话",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 3,
+            "平均阅读量": 2204,
+            "颜色": "#f97316"
+        },
+        {
+            "栏目名称": "有倍而来 焕肤新生",
+            "所属公众号": "丁香园皮肤时间",
+            "月发布频次": 1,
+            "平均阅读量": 10525,
+            "颜色": "#8b5cf6"
+        },
+        {
+            "栏目名称": "有倍而来 焕肤新生",
+            "所属公众号": "医学界皮肤频道",
+            "月发布频次": 1,
+            "平均阅读量": 5087,
+            "颜色": "#10b981"
+        },
+        {
+            "栏目名称": "面面俱氘",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 1,
+            "平均阅读量": 3632,
+            "颜色": "#f97316"
+        },
+        {
+            "栏目名称": "大咖谈",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 1,
+            "平均阅读量": 3575,
+            "颜色": "#f97316"
+        },
+        {
+            "栏目名称": "瑞领前沿 毛发新声",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 1,
+            "平均阅读量": 3081,
+            "颜色": "#f97316"
+        },
+        {
+            "栏目名称": "愈见，一线必妥",
+            "所属公众号": "医脉通皮肤科",
+            "月发布频次": 1,
+            "平均阅读量": 3015,
+            "颜色": "#3b82f6"
+        },
+        {
+            "栏目名称": "23 实战营 特启新生",
+            "所属公众号": "丁香园皮肤时间",
+            "月发布频次": 1,
+            "平均阅读量": 2528,
+            "颜色": "#8b5cf6"
+        },
+        {
+            "栏目名称": "超话星期二",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 1,
+            "平均阅读量": 1589,
+            "颜色": "#f97316"
+        }
+    ],
+    "rank_by_read": [
+        {
+            "栏目名称": "有倍而来 焕肤新生",
+            "所属公众号": "丁香园皮肤时间",
+            "月发布频次": 1,
+            "平均阅读量": 10525,
+            "颜色": "#8b5cf6"
+        },
+        {
+            "栏目名称": "有倍而来 焕肤新生",
+            "所属公众号": "医学界皮肤频道",
+            "月发布频次": 1,
+            "平均阅读量": 5087,
+            "颜色": "#10b981"
+        },
+        {
+            "栏目名称": "一周益见·银领前沿",
+            "所属公众号": "医学界皮肤频道",
+            "月发布频次": 4,
+            "平均阅读量": 4144,
+            "颜色": "#10b981"
+        },
+        {
+            "栏目名称": "益起话银屑",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 3,
+            "平均阅读量": 3755,
+            "颜色": "#f97316"
+        },
+        {
+            "栏目名称": "面面俱氘",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 1,
+            "平均阅读量": 3632,
+            "颜色": "#f97316"
+        },
+        {
+            "栏目名称": "大咖谈",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 1,
+            "平均阅读量": 3575,
+            "颜色": "#f97316"
+        },
+        {
+            "栏目名称": "瑞领前沿 毛发新声",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 1,
+            "平均阅读量": 3081,
+            "颜色": "#f97316"
+        },
+        {
+            "栏目名称": "愈见，一线必妥",
+            "所属公众号": "医脉通皮肤科",
+            "月发布频次": 1,
+            "平均阅读量": 3015,
+            "颜色": "#3b82f6"
+        },
+        {
+            "栏目名称": "23 实战营 特启新生",
+            "所属公众号": "丁香园皮肤时间",
+            "月发布频次": 1,
+            "平均阅读量": 2528,
+            "颜色": "#8b5cf6"
+        },
+        {
+            "栏目名称": "领航者对话",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 3,
+            "平均阅读量": 2204,
+            "颜色": "#f97316"
+        },
+        {
+            "栏目名称": "超话星期二",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 1,
+            "平均阅读量": 1589,
+            "颜色": "#f97316"
+        },
+        {
+            "栏目名称": "病例小课堂",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 4,
+            "平均阅读量": 1214,
+            "颜色": "#f97316"
+        },
+        {
+            "栏目名称": "氘可道，例可名",
+            "所属公众号": "优麦会讯",
+            "月发布频次": 10,
+            "平均阅读量": 536,
+            "颜色": "#f97316"
+        }
+    ]
+};
+
+        // 初始化桑基图
+        const sankeyChart = echarts.init(document.getElementById('sankey-chart'));
+        const countBarChart = echarts.init(document.getElementById('count-bar'));
+        const readBarChart = echarts.init(document.getElementById('read-bar'));
+
+        // 生成筛选按钮
+        const accounts = rawData.nodes.filter(n => n.depth === 0).map(n => n.name);
+        const filterContainer = document.getElementById('filterButtons');
+        accounts.forEach(acc => {
+            const btn = document.createElement('button');
+            btn.className = 'filter-btn';
+            btn.dataset.account = acc;
+            btn.textContent = acc;
+            btn.style.borderColor = rawData.nodes.find(n => n.name === acc).itemStyle.color;
+            filterContainer.appendChild(btn);
+        });
+
+        // 当前筛选账号
+        let currentAccount = '全部账号';
+
+        // 获取筛选后的数据
+        function getFilteredData(account) {
+            if (account === '全部账号') {
+                return {
+                    nodes: JSON.parse(JSON.stringify(rawData.nodes)),
+                    links: JSON.parse(JSON.stringify(rawData.links))
+                };
+            }
+            // 筛选该账号下的栏目和对应内容类型
+            const columns = Object.keys(rawData.column_account_map).filter(
+                col => rawData.column_account_map[col] === account
+            );
+            const types = new Set();
+            const filteredLinks = rawData.links.filter(l => {
+                if (l.source === account) return columns.includes(l.target);
+                if (columns.includes(l.source)) {
+                    types.add(l.target);
+                    return true;
+                }
+                return false;
+            });
+            const filteredNodes = rawData.nodes.filter(n => {
+                if (n.depth === 0) return n.name === account;
+                if (n.depth === 1) return columns.includes(n.name);
+                if (n.depth === 2) return types.has(n.name);
+                return false;
+            });
+            return {nodes: filteredNodes, links: filteredLinks};
+        }
+
+        // 渲染桑基图
+        function renderSankey(account) {
+            const data = getFilteredData(account);
+            // 处理节点标签
+            const nodes = data.nodes.map(n => {
+                let label = n.name;
+                if (n.depth === 0) {
+                    const colCount = Object.keys(rawData.column_account_map).filter(
+                        col => rawData.column_account_map[col] === n.name
+                    ).length;
+                    label = n.name + '\n共' + colCount + '个特色栏目';
+                } else if (n.depth === 1) {
+                    const count = rawData.column_info[n.name].发布频次;
+                    label = n.name + ' ' + count + '篇';
+                }
+                return {
+                    ...n,
+                    label: {
+                        show: true,
+                        formatter: label,
+                        fontSize: 12
+                    }
+                };
+            });
+
+            const option = {
+                tooltip: {
+                    trigger: 'item',
+                    triggerOn: 'mousemove',
+                    formatter: function(params) {
+                        if (params.dataType === 'node') {
+                            const name = params.name;
+                            if (rawData.column_info[name]) {
+                                // 栏目节点
+                                const acc = rawData.column_account_map[name];
+                                const info = rawData.column_info[name];
+                                return '<div style="font-weight:600;margin-bottom:4px">' + name + '</div>' +
+                                        '<div>所属公众号：' + acc + '</div>' +
+                                        '<div>月发布频次：' + info.发布频次 + '篇</div>' +
+                                        '<div>单篇平均阅读量：' + info.平均阅读量 + '</div>';
+                            } else if (accounts.includes(name)) {
+                                // 公众号节点
+                                const cols = Object.keys(rawData.column_account_map).filter(
+                                    col => rawData.column_account_map[col] === name
+                                );
+                                const totalCount = cols.reduce((sum, col) => sum + rawData.column_info[col].发布频次, 0);
+                                const totalRead = cols.reduce((sum, col) => sum + rawData.column_info[col].发布频次 * rawData.column_info[col].平均阅读量, 0);
+                                const avgRead = Math.round(totalRead / totalCount);
+                                return '<div style="font-weight:600;margin-bottom:4px">' + name + '</div>' +
+                                        '<div>商业化特色栏目数：' + cols.length + '个</div>' +
+                                        '<div>月总发布篇数：' + totalCount + '篇</div>' +
+                                        '<div>整体平均阅读量：' + avgRead + '</div>';
+                            } else {
+                                // 内容类型节点
+                                const total = data.links.filter(l => l.target === name).reduce((sum, l) => sum + l.value, 0);
+                                return '<div style="font-weight:600;margin-bottom:4px">' + name + '</div>' +
+                                        '<div>对应栏目总发布篇数：' + total + '篇</div>';
+                            }
+                        } else {
+                            // 连线
+                            return params.data.source + ' → ' + params.data.target + '<br/>发布篇数：' + params.data.value + '篇';
+                        }
+                    }
+                },
+                series: [{
+                    type: 'sankey',
+                    data: nodes,
+                    links: data.links,
+                    left: '5%',
+                    right: '18%',
+                    top: '5%',
+                    bottom: '5%',
+                    nodeWidth: 20,
+                    nodeGap: 12,
+                    draggable: true,
+                    emphasis: {
+                        focus: 'adjacency'
+                    },
+                    lineStyle: {
+                        curveness: 0.5
+                    }
+                }]
+            };
+            sankeyChart.setOption(option, true);
+        }
+
+        // 渲染条形图
+        function renderBars(highlightCol = null) {
+            // 发布频次条形图
+            const countData = currentAccount === '全部账号' ? rawData.rank_by_count : 
+                rawData.rank_by_count.filter(d => d.所属公众号 === currentAccount);
+            const countNames = countData.map(d => d.栏目名称).reverse();
+            const countValues = countData.map(d => d.月发布频次).reverse();
+            const countColors = countData.map(d => d.颜色).reverse();
+
+            countBarChart.setOption({
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {type: 'shadow'},
+                    formatter: function(params) {
+                        const d = countData.find(item => item.栏目名称 === params[0].name);
+                        return '<div style="font-weight:600;margin-bottom:4px">' + d.栏目名称 + '</div>' +
+                                '<div>所属公众号：' + d.所属公众号 + '</div>' +
+                                '<div>月发布频次：' + d.月发布频次 + '篇</div>' +
+                                '<div>平均阅读量：' + d.平均阅读量 + '</div>';
+                    }
+                },
+                grid: {left: 120, right: 40, top: 10, bottom: 30},
+                xAxis: {type: 'value', name: '发布篇数'},
+                yAxis: {type: 'category', data: countNames, axisLabel: {fontSize: 11}},
+                series: [{
+                    type: 'bar',
+                    data: countValues.map((v, i) => ({
+                        value: v,
+                        itemStyle: {
+                            color: highlightCol === countNames[i] ? countColors[i] : countColors[i] + '99',
+                            borderWidth: highlightCol === countNames[i] ? 2 : 0,
+                            borderColor: countColors[i]
+                        }
+                    })),
+                    label: {show: true, position: 'right', fontSize: 11},
+                    cursor: 'pointer'
+                }]
+            }, true);
+
+            // 平均阅读量条形图
+            const readData = currentAccount === '全部账号' ? rawData.rank_by_read :
+                rawData.rank_by_read.filter(d => d.所属公众号 === currentAccount);
+            const readNames = readData.map(d => d.栏目名称).reverse();
+            const readValues = readData.map(d => d.平均阅读量).reverse();
+            const readColors = readData.map(d => d.颜色).reverse();
+
+            readBarChart.setOption({
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {type: 'shadow'},
+                    formatter: function(params) {
+                        const d = readData.find(item => item.栏目名称 === params[0].name);
+                        return '<div style="font-weight:600;margin-bottom:4px">' + d.栏目名称 + '</div>' +
+                                '<div>所属公众号：' + d.所属公众号 + '</div>' +
+                                '<div>月发布频次：' + d.月发布频次 + '篇</div>' +
+                                '<div>平均阅读量：' + d.平均阅读量 + '</div>';
+                    }
+                },
+                grid: {left: 120, right: 40, top: 10, bottom: 30},
+                xAxis: {type: 'value', name: '平均阅读量'},
+                yAxis: {type: 'category', data: readNames, axisLabel: {fontSize: 11}},
+                series: [{
+                    type: 'bar',
+                    data: readValues.map((v, i) => ({
+                        value: v,
+                        itemStyle: {
+                            color: highlightCol === readNames[i] ? readColors[i] : readColors[i] + '99',
+                            borderWidth: highlightCol === readNames[i] ? 2 : 0,
+                            borderColor: readColors[i]
+                        }
+                    })),
+                    label: {show: true, position: 'right', fontSize: 11},
+                    cursor: 'pointer'
+                }]
+            }, true);
+
+            // 点击条形高亮桑基图
+            countBarChart.off('click');
+            countBarChart.on('click', function(params) {
+                highlightColumn(params.name);
+            });
+            readBarChart.off('click');
+            readBarChart.on('click', function(params) {
+                highlightColumn(params.name);
+            });
+        }
+
+        // 高亮指定栏目
+        function highlightColumn(colName) {
+            renderBars(colName);
+            // 高亮桑基图对应节点
+            sankeyChart.dispatchAction({
+                type: 'highlight',
+                seriesIndex: 0,
+                name: colName
+            });
+            setTimeout(() => {
+                sankeyChart.dispatchAction({
+                    type: 'downplay',
+                    seriesIndex: 0
+                });
+            }, 3000);
+        }
+
+        // 筛选按钮事件
+        filterContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('filter-btn')) {
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                currentAccount = e.target.dataset.account;
+                renderSankey(currentAccount);
+                renderBars();
+            }
+        });
+
+        // 响应式
+        window.addEventListener('resize', function() {
+            sankeyChart.resize();
+            countBarChart.resize();
+            readBarChart.resize();
+        });
+
+        // 初始渲染
+        renderSankey('全部账号');
+        renderBars();
+    </script>
+</body>
+</html>
