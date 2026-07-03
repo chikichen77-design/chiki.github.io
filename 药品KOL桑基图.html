@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>药品 × KOL 桑基图 - 商业化合作分析</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f5f7fa;
+    color: #333;
+    min-height: 100vh;
+}
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 24px 40px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.header h1 { font-size: 24px; margin-bottom: 6px; }
+.header .subtitle { font-size: 14px; opacity: 0.9; }
+.stats-bar {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+.stat-item {
+    background: rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 8px 16px;
+    backdrop-filter: blur(4px);
+}
+.stat-item .label { font-size: 12px; opacity: 0.85; }
+.stat-item .value { font-size: 20px; font-weight: 700; }
+.controls {
+    background: white;
+    padding: 16px 40px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #e8e8e8;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.control-group label {
+    font-size: 13px;
+    color: #666;
+    white-space: nowrap;
+    font-weight: 500;
+}
+.control-group input[type="range"] {
+    width: 180px;
+    accent-color: #667eea;
+}
+.control-group input[type="text"] {
+    padding: 6px 12px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    font-size: 13px;
+    width: 200px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.control-group input[type="text"]:focus {
+    border-color: #667eea;
+}
+.control-group select {
+    padding: 6px 12px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    background: white;
+}
+.btn {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+.btn-primary:hover { background: #5a6fd8; }
+.btn-ghost {
+    background: #f0f0f0;
+    color: #666;
+}
+.btn-ghost:hover { background: #e0e0e0; }
+.value-display {
+    font-size: 13px;
+    font-weight: 600;
+    color: #667eea;
+    min-width: 30px;
+}
+.chart-container {
+    padding: 20px 40px;
+    background: white;
+    margin: 16px 40px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+#chart {
+    width: 100%;
+    height: 900px;
+    min-height: 600px;
+}
+.legend {
+    display: flex;
+    gap: 24px;
+    padding: 0 40px 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #666;
+}
+.legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+}
+.info-panel {
+    margin: 0 40px 24px;
+    background: white;
+    border-radius: 12px;
+    padding: 16px 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    display: none;
+}
+.info-panel.active { display: block; }
+.info-panel h3 {
+    font-size: 15px;
+    margin-bottom: 8px;
+    color: #333;
+}
+.info-panel .info-content {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.8;
+}
+.info-panel .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin: 2px 4px 2px 0;
+}
+.tag-drug { background: #e8f4fd; color: #1890ff; }
+.tag-kol { background: #fff7e6; color: #fa8c16; }
+.footer {
+    text-align: center;
+    padding: 20px;
+    color: #999;
+    font-size: 12px;
+}
+@media (max-width: 768px) {
+    .header, .controls, .chart-container, .legend, .info-panel { padding-left: 16px; padding-right: 16px; margin-left: 8px; margin-right: 8px; }
+    #chart { height: 600px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>药品 × KOL 桑基图分析</h1>
+    <div class="subtitle">商业化合作数据 | 药品名称与KOL姓名对应关系可视化</div>
+    <div class="stats-bar" id="statsBar"></div>
+</div>
+
+<div class="controls">
+    <div class="control-group">
+        <label>KOL显示数量:</label>
+        <input type="range" id="kolSlider" min="10" max="312" value="50" step="1">
+        <span class="value-display" id="kolValue">50</span>
+    </div>
+    <div class="control-group">
+        <label>搜索:</label>
+        <input type="text" id="searchInput" placeholder="输入药品或KOL名称...">
+    </div>
+    <div class="control-group">
+        <label>连线最小值:</label>
+        <select id="minLinkSelect">
+            <option value="1">全部 (≥1)</option>
+            <option value="2">≥2</option>
+            <option value="3">≥3</option>
+        </select>
+    </div>
+    <div class="control-group">
+        <button class="btn btn-primary" onclick="renderChart()">应用筛选</button>
+        <button class="btn btn-ghost" onclick="resetFilters()">重置</button>
+    </div>
+</div>
+
+<div class="legend">
+    <div class="legend-item"><div class="legend-color" style="background:#5B8FF9;"></div> 药品名称</div>
+    <div class="legend-item"><div class="legend-color" style="background:#F6BD16;"></div> KOL姓名</div>
+    <div class="legend-item">提示: 药品按关联KOL数量排序，KOL按关联药品数量排序 | 鼠标悬停查看详情，点击节点查看关联信息</div>
+</div>
+
+<div class="info-panel" id="infoPanel">
+    <h3 id="infoTitle"></h3>
+    <div class="info-content" id="infoContent"></div>
+</div>
+
+<div class="chart-container">
+    <div id="chart"></div>
+</div>
+
+<div class="footer">
+    数据来源: 商业化，药品×KOL 0703.xlsx | 筛选条件: 商业化合作标签=商业化, 药品名称≠无/空, KOL姓名≠无/空
+</div>
+
+<script>
+const rawData = {"nodes": [{"name": "硫酸艾玛昔替尼", "type": "drug", "count": 15, "kol_count": 153}, {"name": "替瑞奇珠单抗", "type": "drug", "count": 14, "kol_count": 18}, {"name": "度普利尤单抗", "type": "drug", "count": 12, "kol_count": 83}, {"name": "阿布昔替尼", "type": "drug", "count": 10, "kol_count": 16}, {"name": "氘可来昔替尼", "type": "drug", "count": 9, "kol_count": 38}, {"name": "乌帕替尼", "type": "drug", "count": 8, "kol_count": 21}, {"name": "古塞奇尤单抗", "type": "drug", "count": 7, "kol_count": 15}, {"name": "夫那奇珠单抗", "type": "drug", "count": 6, "kol_count": 93}, {"name": "利特昔替尼", "type": "drug", "count": 6, "kol_count": 6}, {"name": "司库奇尤单抗", "type": "drug", "count": 6, "kol_count": 11}, {"name": "司普奇拜单抗", "type": "drug", "count": 6, "kol_count": 54}, {"name": "芦可替尼", "type": "drug", "count": 3, "kol_count": 2}, {"name": "奥马珠单抗", "type": "drug", "count": 3, "kol_count": 8}, {"name": "阿达木单抗", "type": "drug", "count": 2, "kol_count": 2}, {"name": "比奇珠单抗", "type": "drug", "count": 2, "kol_count": 9}, {"name": "匹康奇拜单抗", "type": "drug", "count": 2, "kol_count": 3}, {"name": "他克莫司", "type": "drug", "count": 1, "kol_count": 2}, {"name": "艾玛昔替尼", "type": "drug", "count": 1, "kol_count": 5}, {"name": "依若奇单抗", "type": "drug", "count": 1, "kol_count": 1}, {"name": "赛立奇单抗", "type": "drug", "count": 1, "kol_count": 1}, {"name": "拉那利尤单抗", "type": "drug", "count": 1, "kol_count": 5}, {"name": "多磺酸粘多糖乳膏", "type": "drug", "count": 1, "kol_count": 3}, {"name": "柯美奇拜单", "type": "drug", "count": 1, "kol_count": 2}, {"name": "盐酸吉卡昔替尼", "type": "drug", "count": 1, "kol_count": 1}, {"name": "克立硼罗", "type": "drug", "count": 1, "kol_count": 2}, {"name": "氟轻松氢醌维A酸乳膏", "type": "drug", "count": 1, "kol_count": 2}, {"name": "莫格利珠单抗", "type": "drug", "count": 1, "kol_count": 1}, {"name": "佩索利单抗", "type": "drug", "count": 1, "kol_count": 1}, {"name": "柯美奇拜单抗", "type": "drug", "count": 1, "kol_count": 1}, {"name": "吴文育", "type": "kol", "count": 18, "drug_count": 7}, {"name": "张建中", "type": "kol", "count": 16, "drug_count": 7}, {"name": "陈爱军", "type": "kol", "count": 14, "drug_count": 4}, {"name": "张学军", "type": "kol", "count": 13, "drug_count": 9}, {"name": "常建民", "type": "kol", "count": 12, "drug_count": 3}, {"name": "张福仁", "type": "kol", "count": 11, "drug_count": 3}, {"name": "周城", "type": "kol", "count": 10, "drug_count": 5}, {"name": "朱慧兰", "type": "kol", "count": 9, "drug_count": 2}, {"name": "夏建新", "type": "kol", "count": 9, "drug_count": 4}, {"name": "张振颖", "type": "kol", "count": 8, "drug_count": 3}, {"name": "沈燕娜", "type": "kol", "count": 8, "drug_count": 4}, {"name": "郑跃", "type": "kol", "count": 8, "drug_count": 2}, {"name": "侯李悦", "type": "kol", "count": 8, "drug_count": 2}, {"name": "李巍", "type": "kol", "count": 8, "drug_count": 4}, {"name": "张锡宝", "type": "kol", "count": 7, "drug_count": 5}, {"name": "魏爱华", "type": "kol", "count": 7, "drug_count": 5}, {"name": "李智铭", "type": "kol", "count": 6, "drug_count": 4}, {"name": "刘玉梅", "type": "kol", "count": 6, "drug_count": 4}, {"name": "张浩", "type": "kol", "count": 6, "drug_count": 4}, {"name": "顾超颖", "type": "kol", "count": 6, "drug_count": 2}, {"name": "林尽染", "type": "kol", "count": 6, "drug_count": 3}, {"name": "林茂", "type": "kol", "count": 5, "drug_count": 4}, {"name": "盛宇俊", "type": "kol", "count": 5, "drug_count": 3}, {"name": "徐金华", "type": "kol", "count": 5, "drug_count": 5}, {"name": "张丽", "type": "kol", "count": 5, "drug_count": 3}, {"name": "方红", "type": "kol", "count": 5, "drug_count": 2}, {"name": "满孝勇", "type": "kol", "count": 4, "drug_count": 4}, {"name": "杨井", "type": "kol", "count": 4, "drug_count": 3}, {"name": "李亚萍", "type": "kol", "count": 4, "drug_count": 3}, {"name": "亓玉清", "type": "kol", "count": 4, "drug_count": 2}, {"name": "陈爱军教授", "type": "kol", "count": 4, "drug_count": 4}, {"name": "沈燕娜教授", "type": "kol", "count": 4, "drug_count": 4}, {"name": "赵作涛", "type": "kol", "count": 4, "drug_count": 3}, {"name": "张小超", "type": "kol", "count": 4, "drug_count": 2}, {"name": "叶静静", "type": "kol", "count": 4, "drug_count": 2}, {"name": "刘倩", "type": "kol", "count": 4, "drug_count": 2}, {"name": "张理涛", "type": "kol", "count": 4, "drug_count": 2}, {"name": "鲁严", "type": "kol", "count": 4, "drug_count": 2}, {"name": "邓丹琪", "type": "kol", "count": 4, "drug_count": 2}, {"name": "王傲雪", "type": "kol", "count": 4, "drug_count": 2}, {"name": "亓玉青", "type": "kol", "count": 4, "drug_count": 2}, {"name": "吴佳纹", "type": "kol", "count": 4, "drug_count": 2}, {"name": "耿松梅", "type": "kol", "count": 4, "drug_count": 4}, {"name": "张春雷", "type": "kol", "count": 4, "drug_count": 2}, {"name": "陈瑾", "type": "kol", "count": 4, "drug_count": 2}, {"name": "陶娟", "type": "kol", "count": 3, "drug_count": 3}, {"name": "李薇", "type": "kol", "count": 3, "drug_count": 3}, {"name": "王美燕", "type": "kol", "count": 3, "drug_count": 2}, {"name": "李林", "type": "kol", "count": 3, "drug_count": 3}, {"name": "陈宏翔", "type": "kol", "count": 3, "drug_count": 3}, {"name": "张弘", "type": "kol", "count": 3, "drug_count": 2}, {"name": "王晓华", "type": "kol", "count": 3, "drug_count": 2}, {"name": "陈柳青", "type": "kol", "count": 3, "drug_count": 3}, {"name": "谢君", "type": "kol", "count": 3, "drug_count": 3}, {"name": "冉玉平", "type": "kol", "count": 3, "drug_count": 2}, {"name": "邓丹琪教授", "type": "kol", "count": 3, "drug_count": 3}, {"name": "高芸璐", "type": "kol", "count": 3, "drug_count": 3}, {"name": "李欣", "type": "kol", "count": 3, "drug_count": 3}, {"name": "王宝玺", "type": "kol", "count": 3, "drug_count": 2}, {"name": "樊平申", "type": "kol", "count": 3, "drug_count": 3}, {"name": "熊霞", "type": "kol", "count": 2, "drug_count": 2}, {"name": "刘国英", "type": "kol", "count": 2, "drug_count": 2}, {"name": "王福喜", "type": "kol", "count": 2, "drug_count": 2}, {"name": "赵俊", "type": "kol", "count": 2, "drug_count": 2}, {"name": "田黎明", "type": "kol", "count": 2, "drug_count": 2}, {"name": "王友发", "type": "kol", "count": 2, "drug_count": 2}, {"name": "向妞", "type": "kol", "count": 2, "drug_count": 2}, {"name": "余晓玲", "type": "kol", "count": 2, "drug_count": 2}, {"name": "王再兴", "type": "kol", "count": 2, "drug_count": 2}, {"name": "杜娟", "type": "kol", "count": 2, "drug_count": 2}, {"name": "阮黎明", "type": "kol", "count": 2, "drug_count": 2}, {"name": "陆原", "type": "kol", "count": 2, "drug_count": 2}, {"name": "李亚丽", "type": "kol", "count": 2, "drug_count": 2}, {"name": "王一枫", "type": "kol", "count": 2, "drug_count": 2}, {"name": "姚凤鸣", "type": "kol", "count": 2, "drug_count": 2}, {"name": "黄艳春", "type": "kol", "count": 2, "drug_count": 2}, {"name": "景海霞", "type": "kol", "count": 2, "drug_count": 2}, {"name": "吴志华", "type": "kol", "count": 2, "drug_count": 2}, {"name": "王友力", "type": "kol", "count": 2, "drug_count": 2}, {"name": "武瑞芳", "type": "kol", "count": 2, "drug_count": 2}, {"name": "钟雨", "type": "kol", "count": 2, "drug_count": 2}, {"name": "陈学军", "type": "kol", "count": 2, "drug_count": 2}, {"name": "林立航", "type": "kol", "count": 2, "drug_count": 2}, {"name": "江从军", "type": "kol", "count": 2, "drug_count": 2}, {"name": "王际童", "type": "kol", "count": 2, "drug_count": 2}, {"name": "党林", "type": "kol", "count": 2, "drug_count": 2}, {"name": "孙秀坤", "type": "kol", "count": 2, "drug_count": 2}, {"name": "王建有", "type": "kol", "count": 2, "drug_count": 2}, {"name": "邹颖", "type": "kol", "count": 2, "drug_count": 2}, {"name": "李伟", "type": "kol", "count": 2, "drug_count": 2}, {"name": "陈贤祯", "type": "kol", "count": 2, "drug_count": 2}, {"name": "龚锦", "type": "kol", "count": 2, "drug_count": 2}, {"name": "罗双艳", "type": "kol", "count": 2, "drug_count": 2}, {"name": "谢玲", "type": "kol", "count": 2, "drug_count": 2}, {"name": "杨孔超", "type": "kol", "count": 2, "drug_count": 2}, {"name": "王建琴", "type": "kol", "count": 2, "drug_count": 2}, {"name": "于波", "type": "kol", "count": 2, "drug_count": 2}, {"name": "叶振杰", "type": "kol", "count": 2, "drug_count": 2}, {"name": "张桂英", "type": "kol", "count": 2, "drug_count": 2}, {"name": "孙毅", "type": "kol", "count": 2, "drug_count": 2}, {"name": "刘钟", "type": "kol", "count": 2, "drug_count": 2}, {"name": "胡秋伟", "type": "kol", "count": 2, "drug_count": 2}, {"name": "林冠廷", "type": "kol", "count": 2, "drug_count": 2}, {"name": "吴玮", "type": "kol", "count": 2, "drug_count": 2}, {"name": "钟华杰", "type": "kol", "count": 2, "drug_count": 2}, {"name": "胡荣欣", "type": "kol", "count": 2, "drug_count": 2}, {"name": "蒋震", "type": "kol", "count": 2, "drug_count": 2}, {"name": "陈海江", "type": "kol", "count": 2, "drug_count": 2}, {"name": "万慧颖", "type": "kol", "count": 2, "drug_count": 2}, {"name": "晋红中", "type": "kol", "count": 2, "drug_count": 1}, {"name": "王秀丽", "type": "kol", "count": 2, "drug_count": 1}, {"name": "方方", "type": "kol", "count": 2, "drug_count": 1}, {"name": "鞠强", "type": "kol", "count": 2, "drug_count": 1}, {"name": "丁晓琴", "type": "kol", "count": 2, "drug_count": 2}, {"name": "周焰", "type": "kol", "count": 2, "drug_count": 2}, {"name": "刘湘", "type": "kol", "count": 2, "drug_count": 2}, {"name": "施为", "type": "kol", "count": 2, "drug_count": 2}, {"name": "马一平", "type": "kol", "count": 2, "drug_count": 2}, {"name": "陈文琦", "type": "kol", "count": 2, "drug_count": 2}, {"name": "顾颖颖", "type": "kol", "count": 2, "drug_count": 2}, {"name": "张理涛教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "鲁严教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "吴文育教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "李巍教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "魏爱华教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "张振颖教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "方红教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "王傲雪教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "高芸璐教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "奚丹教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "赵航博士", "type": "kol", "count": 2, "drug_count": 2}, {"name": "贾建恒博士", "type": "kol", "count": 2, "drug_count": 2}, {"name": "尚元元教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "郑文军", "type": "kol", "count": 2, "drug_count": 2}, {"name": "孙青", "type": "kol", "count": 2, "drug_count": 1}, {"name": "涂平", "type": "kol", "count": 2, "drug_count": 2}, {"name": "奚丹", "type": "kol", "count": 2, "drug_count": 2}, {"name": "尚元元", "type": "kol", "count": 2, "drug_count": 2}, {"name": "王渟", "type": "kol", "count": 2, "drug_count": 2}, {"name": "肖塔", "type": "kol", "count": 2, "drug_count": 2}, {"name": "蔡涛", "type": "kol", "count": 2, "drug_count": 2}, {"name": "刘丽娟", "type": "kol", "count": 2, "drug_count": 2}, {"name": "田歆", "type": "kol", "count": 2, "drug_count": 2}, {"name": "韩昌旭", "type": "kol", "count": 2, "drug_count": 2}, {"name": "王莹哲", "type": "kol", "count": 2, "drug_count": 2}, {"name": "马莉", "type": "kol", "count": 2, "drug_count": 2}, {"name": "张建中教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "张福仁教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "常建民教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "顾超颖教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "侯李悦教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "朱慧兰教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "郑跃教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "亓玉青教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "李智铭教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "盛宇俊教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "吴佳纹教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "夏建新教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "张小超教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "王渟教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "肖塔教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "叶静静教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "蔡涛教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "刘丽娟教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "李欣教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "田歆教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "韩昌旭教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "王莹哲教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "马莉教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "刘倩教授", "type": "kol", "count": 2, "drug_count": 2}, {"name": "刘红", "type": "kol", "count": 2, "drug_count": 2}, {"name": "赵琰", "type": "kol", "count": 2, "drug_count": 2}, {"name": "马学良", "type": "kol", "count": 2, "drug_count": 2}, {"name": "刘晓明", "type": "kol", "count": 2, "drug_count": 2}, {"name": "宋海祯", "type": "kol", "count": 2, "drug_count": 2}, {"name": "丁杨峰", "type": "kol", "count": 2, "drug_count": 2}, {"name": "袁海舰", "type": "kol", "count": 2, "drug_count": 2}, {"name": "陈国", "type": "kol", "count": 2, "drug_count": 2}, {"name": "任诗峰", "type": "kol", "count": 2, "drug_count": 2}, {"name": "霍仕文", "type": "kol", "count": 2, "drug_count": 2}, {"name": "何黎", "type": "kol", "count": 1, "drug_count": 1}, {"name": "闫言", "type": "kol", "count": 1, "drug_count": 1}, {"name": "邓娅", "type": "kol", "count": 1, "drug_count": 1}, {"name": "刘岩", "type": "kol", "count": 1, "drug_count": 1}, {"name": "罗娜", "type": "kol", "count": 1, "drug_count": 1}, {"name": "马琳", "type": "kol", "count": 1, "drug_count": 1}, {"name": "Elizabeth A. Kiracofe", "type": "kol", "count": 1, "drug_count": 1}, {"name": "Sarina Elmariah", "type": "kol", "count": 1, "drug_count": 1}, {"name": "林英翔", "type": "kol", "count": 1, "drug_count": 1}, {"name": "王晓阳", "type": "kol", "count": 1, "drug_count": 1}, {"name": "林志淼", "type": "kol", "count": 1, "drug_count": 1}, {"name": "李静", "type": "kol", "count": 1, "drug_count": 1}, {"name": "刘晓", "type": "kol", "count": 1, "drug_count": 1}, {"name": "朱可建", "type": "kol", "count": 1, "drug_count": 1}, {"name": "喻楠", "type": "kol", "count": 1, "drug_count": 1}, {"name": "王文慧", "type": "kol", "count": 1, "drug_count": 1}, {"name": "史玉玲", "type": "kol", "count": 1, "drug_count": 1}, {"name": "杨青", "type": "kol", "count": 1, "drug_count": 1}, {"name": "刘盛秀", "type": "kol", "count": 1, "drug_count": 1}, {"name": "张涛", "type": "kol", "count": 1, "drug_count": 1}, {"name": "薛珂", "type": "kol", "count": 1, "drug_count": 1}, {"name": "李霞教授", "type": "kol", "count": 1, "drug_count": 1}, {"name": "姜红浩教授", "type": "kol", "count": 1, "drug_count": 1}, {"name": "王轶伦教授", "type": "kol", "count": 1, "drug_count": 1}, {"name": "金怡教授", "type": "kol", "count": 1, "drug_count": 1}, {"name": "彭霖教授", "type": "kol", "count": 1, "drug_count": 1}, {"name": "项蕾红", "type": "kol", "count": 1, "drug_count": 1}, {"name": "吴辛刚", "type": "kol", "count": 1, "drug_count": 1}, {"name": "陈静", "type": "kol", "count": 1, "drug_count": 1}, {"name": "唐苏为", "type": "kol", "count": 1, "drug_count": 1}, {"name": "张江安", "type": "kol", "count": 1, "drug_count": 1}, {"name": "孙振燕", "type": "kol", "count": 1, "drug_count": 1}, {"name": "闵玮", "type": "kol", "count": 1, "drug_count": 1}, {"name": "尹斌", "type": "kol", "count": 1, "drug_count": 1}, {"name": "于学红", "type": "kol", "count": 1, "drug_count": 1}, {"name": "王苗苗", "type": "kol", "count": 1, "drug_count": 1}, {"name": "张卫华", "type": "kol", "count": 1, "drug_count": 1}, {"name": "范崇帅", "type": "kol", "count": 1, "drug_count": 1}, {"name": "丁杨峰教授", "type": "kol", "count": 1, "drug_count": 1}, {"name": "涂平教授", "type": "kol", "count": 1, "drug_count": 1}, {"name": "杨森", "type": "kol", "count": 1, "drug_count": 1}, {"name": "韩永春", "type": "kol", "count": 1, "drug_count": 1}, {"name": "袁立燕教授", "type": "kol", "count": 1, "drug_count": 1}, {"name": "吴晓雁", "type": "kol", "count": 1, "drug_count": 1}, {"name": "石春蕊", "type": "kol", "count": 1, "drug_count": 1}, {"name": "胡祥宇", "type": "kol", "count": 1, "drug_count": 1}, {"name": "尹志强", "type": "kol", "count": 1, "drug_count": 1}, {"name": "金怡", "type": "kol", "count": 1, "drug_count": 1}, {"name": "祝立丽", "type": "kol", "count": 1, "drug_count": 1}, {"name": "孙建方教授", "type": "kol", "count": 1, "drug_count": 1}, {"name": "王再兴教授", "type": "kol", "count": 1, "drug_count": 1}, {"name": "孙良丹教授", "type": "kol", "count": 1, "drug_count": 1}, {"name": "林秉奖", "type": "kol", "count": 1, "drug_count": 1}, {"name": "孟祖东", "type": "kol", "count": 1, "drug_count": 1}, {"name": "王鲁梅", "type": "kol", "count": 1, "drug_count": 1}, {"name": "胡莉芳", "type": "kol", "count": 1, "drug_count": 1}, {"name": "黄卫宁", "type": "kol", "count": 1, "drug_count": 1}, {"name": "谢倩", "type": "kol", "count": 1, "drug_count": 1}, {"name": "邹耘", "type": "kol", "count": 1, "drug_count": 1}, {"name": "吴原", "type": "kol", "count": 1, "drug_count": 1}, {"name": "孔祥明", "type": "kol", "count": 1, "drug_count": 1}, {"name": "何彩凤", "type": "kol", "count": 1, "drug_count": 1}, {"name": "陶茂灿", "type": "kol", "count": 1, "drug_count": 1}, {"name": "乔建军", "type": "kol", "count": 1, "drug_count": 1}, {"name": "张堂德", "type": "kol", "count": 1, "drug_count": 1}, {"name": "黄长征", "type": "kol", "count": 1, "drug_count": 1}, {"name": "王峰", "type": "kol", "count": 1, "drug_count": 1}, {"name": "陈静宇", "type": "kol", "count": 1, "drug_count": 1}, {"name": "丁宗晃", "type": "kol", "count": 1, "drug_count": 1}, {"name": "王涧", "type": "kol", "count": 1, "drug_count": 1}, {"name": "许炎竹", "type": "kol", "count": 1, "drug_count": 1}, {"name": "杜鑫", "type": "kol", "count": 1, "drug_count": 1}, {"name": "高贵云", "type": "kol", "count": 1, "drug_count": 1}, {"name": "孙春秋", "type": "kol", "count": 1, "drug_count": 1}, {"name": "田庆均", "type": "kol", "count": 1, "drug_count": 1}, {"name": "王培光", "type": "kol", "count": 1, "drug_count": 1}, {"name": "周强", "type": "kol", "count": 1, "drug_count": 1}, {"name": "张予晋", "type": "kol", "count": 1, "drug_count": 1}, {"name": "周峻", "type": "kol", "count": 1, "drug_count": 1}, {"name": "涂盛安", "type": "kol", "count": 1, "drug_count": 1}, {"name": "戴叶芹", "type": "kol", "count": 1, "drug_count": 1}, {"name": "梅韬", "type": "kol", "count": 1, "drug_count": 1}, {"name": "王丹妮", "type": "kol", "count": 1, "drug_count": 1}, {"name": "周渐云", "type": "kol", "count": 1, "drug_count": 1}, {"name": "周培媚", "type": "kol", "count": 1, "drug_count": 1}, {"name": "许向前", "type": "kol", "count": 1, "drug_count": 1}, {"name": "何渊民", "type": "kol", "count": 1, "drug_count": 1}, {"name": "张小婷", "type": "kol", "count": 1, "drug_count": 1}, {"name": "李菲", "type": "kol", "count": 1, "drug_count": 1}, {"name": "张娜", "type": "kol", "count": 1, "drug_count": 1}, {"name": "章星琪", "type": "kol", "count": 1, "drug_count": 1}, {"name": "于春水", "type": "kol", "count": 1, "drug_count": 1}, {"name": "罗保香", "type": "kol", "count": 1, "drug_count": 1}, {"name": "叶艳婷", "type": "kol", "count": 1, "drug_count": 1}, {"name": "刘晓艳", "type": "kol", "count": 1, "drug_count": 1}, {"name": "刘应辉", "type": "kol", "count": 1, "drug_count": 1}, {"name": "李玲", "type": "kol", "count": 1, "drug_count": 1}, {"name": "郑锦芬", "type": "kol", "count": 1, "drug_count": 1}, {"name": "陈宝清", "type": "kol", "count": 1, "drug_count": 1}, {"name": "韩凯", "type": "kol", "count": 1, "drug_count": 1}, {"name": "张慧", "type": "kol", "count": 1, "drug_count": 1}, {"name": "武松江", "type": "kol", "count": 1, "drug_count": 1}, {"name": "陈晓栋", "type": "kol", "count": 1, "drug_count": 1}, {"name": "刘红霞", "type": "kol", "count": 1, "drug_count": 1}, {"name": "曾凡钦", "type": "kol", "count": 1, "drug_count": 1}, {"name": "郭庆", "type": "kol", "count": 1, "drug_count": 1}, {"name": "包军", "type": "kol", "count": 1, "drug_count": 1}, {"name": "魏庆宇", "type": "kol", "count": 1, "drug_count": 1}, {"name": "陈官芝", "type": "kol", "count": 1, "drug_count": 1}, {"name": "刘全忠", "type": "kol", "count": 1, "drug_count": 1}, {"name": "朱宪彝", "type": "kol", "count": 1, "drug_count": 1}, {"name": "郑敏", "type": "kol", "count": 1, "drug_count": 1}, {"name": "刘洁", "type": "kol", "count": 1, "drug_count": 1}, {"name": "鲁建云", "type": "kol", "count": 1, "drug_count": 1}, {"name": "张蕴颖", "type": "kol", "count": 1, "drug_count": 1}, {"name": "孙明强", "type": "kol", "count": 1, "drug_count": 1}, {"name": "崔绍山", "type": "kol", "count": 1, "drug_count": 1}, {"name": "贾立军", "type": "kol", "count": 1, "drug_count": 1}, {"name": "杨斌", "type": "kol", "count": 1, "drug_count": 1}, {"name": "刘宏业", "type": "kol", "count": 1, "drug_count": 1}, {"name": "袁景奕", "type": "kol", "count": 1, "drug_count": 1}, {"name": "王建波", "type": "kol", "count": 1, "drug_count": 1}, {"name": "刘芳", "type": "kol", "count": 1, "drug_count": 1}, {"name": "郝飞", "type": "kol", "count": 1, "drug_count": 1}, {"name": "匡叶红", "type": "kol", "count": 1, "drug_count": 1}, {"name": "刘琴", "type": "kol", "count": 1, "drug_count": 1}, {"name": "申晨", "type": "kol", "count": 1, "drug_count": 1}, {"name": "贾华魁", "type": "kol", "count": 1, "drug_count": 1}, {"name": "陈龙", "type": "kol", "count": 1, "drug_count": 1}, {"name": "胡彬", "type": "kol", "count": 1, "drug_count": 1}, {"name": "吕永梅", "type": "kol", "count": 1, "drug_count": 1}, {"name": "丁延涛", "type": "kol", "count": 1, "drug_count": 1}], "links": [{"source": "夫那奇珠单抗", "target": "满孝勇", "value": 1}, {"source": "夫那奇珠单抗", "target": "陶娟", "value": 1}, {"source": "夫那奇珠单抗", "target": "张锡宝", "value": 1}, {"source": "夫那奇珠单抗", "target": "熊霞", "value": 1}, {"source": "夫那奇珠单抗", "target": "李薇", "value": 1}, {"source": "夫那奇珠单抗", "target": "刘国英", "value": 1}, {"source": "夫那奇珠单抗", "target": "王福喜", "value": 1}, {"source": "夫那奇珠单抗", "target": "王美燕", "value": 1}, {"source": "夫那奇珠单抗", "target": "赵俊", "value": 1}, {"source": "夫那奇珠单抗", "target": "田黎明", "value": 1}, {"source": "夫那奇珠单抗", "target": "李林", "value": 1}, {"source": "夫那奇珠单抗", "target": "王友发", "value": 1}, {"source": "夫那奇珠单抗", "target": "向妞", "value": 1}, {"source": "夫那奇珠单抗", "target": "杨井", "value": 1}, {"source": "夫那奇珠单抗", "target": "余晓玲", "value": 1}, {"source": "夫那奇珠单抗", "target": "王再兴", "value": 1}, {"source": "夫那奇珠单抗", "target": "杜娟", "value": 1}, {"source": "夫那奇珠单抗", "target": "张振颖", "value": 3}, {"source": "夫那奇珠单抗", "target": "阮黎明", "value": 1}, {"source": "夫那奇珠单抗", "target": "陈宏翔", "value": 1}, {"source": "夫那奇珠单抗", "target": "陆原", "value": 1}, {"source": "夫那奇珠单抗", "target": "李亚丽", "value": 1}, {"source": "夫那奇珠单抗", "target": "沈燕娜", "value": 2}, {"source": "夫那奇珠单抗", "target": "王一枫", "value": 1}, {"source": "夫那奇珠单抗", "target": "姚凤鸣", "value": 1}, {"source": "夫那奇珠单抗", "target": "黄艳春", "value": 1}, {"source": "夫那奇珠单抗", "target": "景海霞", "value": 1}, {"source": "夫那奇珠单抗", "target": "吴志华", "value": 1}, {"source": "夫那奇珠单抗", "target": "王友力", "value": 1}, {"source": "夫那奇珠单抗", "target": "武瑞芳", "value": 1}, {"source": "夫那奇珠单抗", "target": "钟雨", "value": 1}, {"source": "夫那奇珠单抗", "target": "陈学军", "value": 1}, {"source": "夫那奇珠单抗", "target": "林立航", "value": 1}, {"source": "夫那奇珠单抗", "target": "李智铭", "value": 1}, {"source": "夫那奇珠单抗", "target": "江从军", "value": 1}, {"source": "夫那奇珠单抗", "target": "刘玉梅", "value": 1}, {"source": "夫那奇珠单抗", "target": "王际童", "value": 1}, {"source": "夫那奇珠单抗", "target": "党林", "value": 1}, {"source": "夫那奇珠单抗", "target": "孙秀坤", "value": 1}, {"source": "夫那奇珠单抗", "target": "王建有", "value": 1}, {"source": "夫那奇珠单抗", "target": "邹颖", "value": 1}, {"source": "夫那奇珠单抗", "target": "李伟", "value": 1}, {"source": "夫那奇珠单抗", "target": "陈贤祯", "value": 1}, {"source": "夫那奇珠单抗", "target": "龚锦", "value": 1}, {"source": "夫那奇珠单抗", "target": "罗双艳", "value": 1}, {"source": "夫那奇珠单抗", "target": "谢玲", "value": 1}, {"source": "夫那奇珠单抗", "target": "杨孔超", "value": 1}, {"source": "夫那奇珠单抗", "target": "王建琴", "value": 1}, {"source": "夫那奇珠单抗", "target": "于波", "value": 1}, {"source": "夫那奇珠单抗", "target": "叶振杰", "value": 1}, {"source": "夫那奇珠单抗", "target": "张桂英", "value": 1}, {"source": "夫那奇珠单抗", "target": "孙毅", "value": 1}, {"source": "夫那奇珠单抗", "target": "刘钟", "value": 1}, {"source": "夫那奇珠单抗", "target": "胡秋伟", "value": 1}, {"source": "夫那奇珠单抗", "target": "林冠廷", "value": 1}, {"source": "夫那奇珠单抗", "target": "吴玮", "value": 1}, {"source": "夫那奇珠单抗", "target": "钟华杰", "value": 1}, {"source": "夫那奇珠单抗", "target": "张弘", "value": 1}, {"source": "夫那奇珠单抗", "target": "胡荣欣", "value": 1}, {"source": "夫那奇珠单抗", "target": "蒋震", "value": 1}, {"source": "夫那奇珠单抗", "target": "陈海江", "value": 1}, {"source": "夫那奇珠单抗", "target": "万慧颖", "value": 1}, {"source": "夫那奇珠单抗", "target": "张浩", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "满孝勇", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "陶娟", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "张锡宝", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "熊霞", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "李薇", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "刘国英", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "王福喜", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "王美燕", "value": 2}, {"source": "硫酸艾玛昔替尼", "target": "赵俊", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "田黎明", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "李林", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "王友发", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "向妞", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "杨井", "value": 2}, {"source": "硫酸艾玛昔替尼", "target": "余晓玲", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "王再兴", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "杜娟", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "张振颖", "value": 4}, {"source": "硫酸艾玛昔替尼", "target": "阮黎明", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "陈宏翔", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "陆原", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "李亚丽", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "沈燕娜", "value": 2}, {"source": "硫酸艾玛昔替尼", "target": "王一枫", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "姚凤鸣", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "黄艳春", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "景海霞", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "吴志华", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "王友力", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "武瑞芳", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "钟雨", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "陈学军", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "林立航", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "李智铭", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "江从军", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "刘玉梅", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "王际童", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "党林", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "孙秀坤", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "王建有", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "邹颖", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "李伟", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "陈贤祯", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "龚锦", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "罗双艳", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "谢玲", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "杨孔超", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "王建琴", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "于波", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "叶振杰", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "张桂英", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "孙毅", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "刘钟", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "胡秋伟", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "林冠廷", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "吴玮", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "钟华杰", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "张弘", "value": 2}, {"source": "硫酸艾玛昔替尼", "target": "胡荣欣", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "蒋震", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "陈海江", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "万慧颖", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "张浩", "value": 1}, {"source": "利特昔替尼", "target": "林茂", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "林茂", "value": 2}, {"source": "芦可替尼", "target": "盛宇俊", "value": 1}, {"source": "替瑞奇珠单抗", "target": "王晓华", "value": 2}, {"source": "阿达木单抗", "target": "王晓华", "value": 1}, {"source": "比奇珠单抗", "target": "吴文育", "value": 2}, {"source": "比奇珠单抗", "target": "晋红中", "value": 2}, {"source": "比奇珠单抗", "target": "何黎", "value": 1}, {"source": "比奇珠单抗", "target": "王秀丽", "value": 2}, {"source": "比奇珠单抗", "target": "常建民", "value": 1}, {"source": "比奇珠单抗", "target": "陈柳青", "value": 1}, {"source": "比奇珠单抗", "target": "方方", "value": 2}, {"source": "比奇珠单抗", "target": "鞠强", "value": 2}, {"source": "比奇珠单抗", "target": "闫言", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "谢君", "value": 1}, {"source": "乌帕替尼", "target": "谢君", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "冉玉平", "value": 2}, {"source": "氘可来昔替尼", "target": "冉玉平", "value": 1}, {"source": "氘可来昔替尼", "target": "邓娅", "value": 1}, {"source": "氘可来昔替尼", "target": "刘岩", "value": 1}, {"source": "氘可来昔替尼", "target": "李林", "value": 1}, {"source": "氘可来昔替尼", "target": "罗娜", "value": 1}, {"source": "阿布昔替尼", "target": "丁晓琴", "value": 1}, {"source": "阿布昔替尼", "target": "周焰", "value": 1}, {"source": "司库奇尤单抗", "target": "丁晓琴", "value": 1}, {"source": "司库奇尤单抗", "target": "周焰", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "刘湘", "value": 1}, {"source": "利特昔替尼", "target": "施为", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "施为", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "李亚萍", "value": 2}, {"source": "阿布昔替尼", "target": "马一平", "value": 1}, {"source": "阿布昔替尼", "target": "陈文琦", "value": 1}, {"source": "他克莫司", "target": "马一平", "value": 1}, {"source": "他克莫司", "target": "陈文琦", "value": 1}, {"source": "司普奇拜单抗", "target": "张建中", "value": 5}, {"source": "司普奇拜单抗", "target": "张福仁", "value": 5}, {"source": "司普奇拜单抗", "target": "常建民", "value": 5}, {"source": "司普奇拜单抗", "target": "陈爱军", "value": 5}, {"source": "度普利尤单抗", "target": "张建中", "value": 6}, {"source": "度普利尤单抗", "target": "张福仁", "value": 5}, {"source": "度普利尤单抗", "target": "常建民", "value": 6}, {"source": "度普利尤单抗", "target": "陈爱军", "value": 5}, {"source": "司普奇拜单抗", "target": "顾颖颖", "value": 1}, {"source": "司普奇拜单抗", "target": "郑跃", "value": 4}, {"source": "司普奇拜单抗", "target": "亓玉清", "value": 2}, {"source": "司普奇拜单抗", "target": "侯李悦", "value": 4}, {"source": "司普奇拜单抗", "target": "朱慧兰", "value": 4}, {"source": "度普利尤单抗", "target": "顾颖颖", "value": 1}, {"source": "度普利尤单抗", "target": "郑跃", "value": 4}, {"source": "度普利尤单抗", "target": "亓玉清", "value": 2}, {"source": "度普利尤单抗", "target": "侯李悦", "value": 4}, {"source": "度普利尤单抗", "target": "朱慧兰", "value": 5}, {"source": "阿布昔替尼", "target": "张建中", "value": 1}, {"source": "匹康奇拜单抗", "target": "张学军", "value": 1}, {"source": "古塞奇尤单抗", "target": "张学军", "value": 1}, {"source": "替瑞奇珠单抗", "target": "张学军", "value": 3}, {"source": "夫那奇珠单抗", "target": "陈爱军教授", "value": 1}, {"source": "夫那奇珠单抗", "target": "张理涛教授", "value": 1}, {"source": "夫那奇珠单抗", "target": "鲁严教授", "value": 1}, {"source": "夫那奇珠单抗", "target": "吴文育教授", "value": 1}, {"source": "夫那奇珠单抗", "target": "李巍教授", "value": 1}, {"source": "夫那奇珠单抗", "target": "魏爱华教授", "value": 1}, {"source": "夫那奇珠单抗", "target": "张振颖教授", "value": 1}, {"source": "夫那奇珠单抗", "target": "邓丹琪教授", "value": 1}, {"source": "夫那奇珠单抗", "target": "方红教授", "value": 1}, {"source": "夫那奇珠单抗", "target": "王傲雪教授", "value": 1}, {"source": "夫那奇珠单抗", "target": "高芸璐教授", "value": 1}, {"source": "夫那奇珠单抗", "target": "奚丹教授", "value": 1}, {"source": "夫那奇珠单抗", "target": "赵航博士", "value": 1}, {"source": "夫那奇珠单抗", "target": "沈燕娜教授", "value": 1}, {"source": "夫那奇珠单抗", "target": "贾建恒博士", "value": 1}, {"source": "夫那奇珠单抗", "target": "尚元元教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "陈爱军教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "张理涛教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "鲁严教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "吴文育教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "李巍教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "魏爱华教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "张振颖教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "邓丹琪教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "方红教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "王傲雪教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "高芸璐教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "奚丹教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "赵航博士", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "沈燕娜教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "贾建恒博士", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "尚元元教授", "value": 1}, {"source": "艾玛昔替尼", "target": "林茂", "value": 1}, {"source": "艾玛昔替尼", "target": "郑文军", "value": 1}, {"source": "艾玛昔替尼", "target": "李亚萍", "value": 1}, {"source": "艾玛昔替尼", "target": "刘湘", "value": 1}, {"source": "艾玛昔替尼", "target": "谢君", "value": 1}, {"source": "度普利尤单抗", "target": "马琳", "value": 1}, {"source": "度普利尤单抗", "target": "Elizabeth A. Kiracofe", "value": 1}, {"source": "度普利尤单抗", "target": "孙青", "value": 2}, {"source": "度普利尤单抗", "target": "魏爱华", "value": 1}, {"source": "度普利尤单抗", "target": "Sarina Elmariah", "value": 1}, {"source": "度普利尤单抗", "target": "林英翔", "value": 1}, {"source": "度普利尤单抗", "target": "赵作涛", "value": 1}, {"source": "度普利尤单抗", "target": "王晓阳", "value": 1}, {"source": "度普利尤单抗", "target": "林志淼", "value": 1}, {"source": "度普利尤单抗", "target": "陶娟", "value": 1}, {"source": "度普利尤单抗", "target": "涂平", "value": 1}, {"source": "阿布昔替尼", "target": "李静", "value": 1}, {"source": "阿布昔替尼", "target": "刘晓", "value": 1}, {"source": "替瑞奇珠单抗", "target": "朱可建", "value": 1}, {"source": "利特昔替尼", "target": "吴文育", "value": 3}, {"source": "利特昔替尼", "target": "周城", "value": 3}, {"source": "乌帕替尼", "target": "吴文育", "value": 3}, {"source": "乌帕替尼", "target": "周城", "value": 3}, {"source": "度普利尤单抗", "target": "吴文育", "value": 1}, {"source": "度普利尤单抗", "target": "周城", "value": 1}, {"source": "奥马珠单抗", "target": "吴文育", "value": 1}, {"source": "奥马珠单抗", "target": "周城", "value": 1}, {"source": "司普奇拜单抗", "target": "顾超颖", "value": 3}, {"source": "司普奇拜单抗", "target": "夏建新", "value": 2}, {"source": "司普奇拜单抗", "target": "沈燕娜", "value": 2}, {"source": "司普奇拜单抗", "target": "张小超", "value": 2}, {"source": "司普奇拜单抗", "target": "叶静静", "value": 2}, {"source": "司普奇拜单抗", "target": "刘倩", "value": 2}, {"source": "度普利尤单抗", "target": "顾超颖", "value": 3}, {"source": "度普利尤单抗", "target": "夏建新", "value": 4}, {"source": "度普利尤单抗", "target": "沈燕娜", "value": 2}, {"source": "度普利尤单抗", "target": "张小超", "value": 2}, {"source": "度普利尤单抗", "target": "叶静静", "value": 2}, {"source": "度普利尤单抗", "target": "刘倩", "value": 2}, {"source": "依若奇单抗", "target": "徐金华", "value": 1}, {"source": "司库奇尤单抗", "target": "徐金华", "value": 1}, {"source": "夫那奇珠单抗", "target": "徐金华", "value": 1}, {"source": "赛立奇单抗", "target": "徐金华", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "吴文育", "value": 6}, {"source": "利特昔替尼", "target": "林尽染", "value": 2}, {"source": "乌帕替尼", "target": "林尽染", "value": 2}, {"source": "硫酸艾玛昔替尼", "target": "周城", "value": 2}, {"source": "硫酸艾玛昔替尼", "target": "林尽染", "value": 2}, {"source": "乌帕替尼", "target": "张学军", "value": 1}, {"source": "阿布昔替尼", "target": "张学军", "value": 1}, {"source": "利特昔替尼", "target": "张学军", "value": 1}, {"source": "芦可替尼", "target": "张学军", "value": 2}, {"source": "阿布昔替尼", "target": "张丽", "value": 1}, {"source": "夫那奇珠单抗", "target": "陈爱军", "value": 2}, {"source": "夫那奇珠单抗", "target": "张理涛", "value": 2}, {"source": "夫那奇珠单抗", "target": "鲁严", "value": 2}, {"source": "夫那奇珠单抗", "target": "吴文育", "value": 2}, {"source": "夫那奇珠单抗", "target": "李巍", "value": 2}, {"source": "夫那奇珠单抗", "target": "魏爱华", "value": 2}, {"source": "夫那奇珠单抗", "target": "邓丹琪", "value": 2}, {"source": "夫那奇珠单抗", "target": "方红", "value": 2}, {"source": "夫那奇珠单抗", "target": "王傲雪", "value": 2}, {"source": "硫酸艾玛昔替尼", "target": "陈爱军", "value": 2}, {"source": "硫酸艾玛昔替尼", "target": "张理涛", "value": 2}, {"source": "硫酸艾玛昔替尼", "target": "鲁严", "value": 2}, {"source": "硫酸艾玛昔替尼", "target": "李巍", "value": 2}, {"source": "硫酸艾玛昔替尼", "target": "魏爱华", "value": 2}, {"source": "硫酸艾玛昔替尼", "target": "邓丹琪", "value": 2}, {"source": "硫酸艾玛昔替尼", "target": "方红", "value": 3}, {"source": "硫酸艾玛昔替尼", "target": "王傲雪", "value": 2}, {"source": "夫那奇珠单抗", "target": "高芸璐", "value": 1}, {"source": "夫那奇珠单抗", "target": "奚丹", "value": 1}, {"source": "夫那奇珠单抗", "target": "尚元元", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "高芸璐", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "奚丹", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "尚元元", "value": 1}, {"source": "司普奇拜单抗", "target": "亓玉青", "value": 2}, {"source": "司普奇拜单抗", "target": "李智铭", "value": 2}, {"source": "司普奇拜单抗", "target": "盛宇俊", "value": 2}, {"source": "司普奇拜单抗", "target": "吴佳纹", "value": 2}, {"source": "度普利尤单抗", "target": "亓玉青", "value": 2}, {"source": "度普利尤单抗", "target": "李智铭", "value": 2}, {"source": "度普利尤单抗", "target": "盛宇俊", "value": 2}, {"source": "度普利尤单抗", "target": "吴佳纹", "value": 2}, {"source": "拉那利尤单抗", "target": "张建中", "value": 1}, {"source": "拉那利尤单抗", "target": "徐金华", "value": 1}, {"source": "拉那利尤单抗", "target": "张锡宝", "value": 1}, {"source": "拉那利尤单抗", "target": "魏爱华", "value": 1}, {"source": "拉那利尤单抗", "target": "喻楠", "value": 1}, {"source": "氘可来昔替尼", "target": "耿松梅", "value": 1}, {"source": "氘可来昔替尼", "target": "王文慧", "value": 1}, {"source": "匹康奇拜单抗", "target": "史玉玲", "value": 1}, {"source": "匹康奇拜单抗", "target": "杨青", "value": 1}, {"source": "乌帕替尼", "target": "张春雷", "value": 2}, {"source": "乌帕替尼", "target": "张锡宝", "value": 2}, {"source": "乌帕替尼", "target": "夏建新", "value": 2}, {"source": "乌帕替尼", "target": "陈瑾", "value": 2}, {"source": "乌帕替尼", "target": "张浩", "value": 2}, {"source": "乌帕替尼", "target": "李巍", "value": 2}, {"source": "乌帕替尼", "target": "刘玉梅", "value": 2}, {"source": "乌帕替尼", "target": "张丽", "value": 2}, {"source": "度普利尤单抗", "target": "张春雷", "value": 2}, {"source": "度普利尤单抗", "target": "张锡宝", "value": 2}, {"source": "度普利尤单抗", "target": "陈瑾", "value": 2}, {"source": "度普利尤单抗", "target": "张浩", "value": 2}, {"source": "度普利尤单抗", "target": "李巍", "value": 2}, {"source": "度普利尤单抗", "target": "刘玉梅", "value": 2}, {"source": "度普利尤单抗", "target": "张丽", "value": 2}, {"source": "司普奇拜单抗", "target": "王渟", "value": 1}, {"source": "司普奇拜单抗", "target": "肖塔", "value": 1}, {"source": "司普奇拜单抗", "target": "蔡涛", "value": 1}, {"source": "司普奇拜单抗", "target": "刘丽娟", "value": 1}, {"source": "司普奇拜单抗", "target": "李欣", "value": 1}, {"source": "司普奇拜单抗", "target": "田歆", "value": 1}, {"source": "司普奇拜单抗", "target": "韩昌旭", "value": 1}, {"source": "司普奇拜单抗", "target": "王莹哲", "value": 1}, {"source": "司普奇拜单抗", "target": "马莉", "value": 1}, {"source": "度普利尤单抗", "target": "王渟", "value": 1}, {"source": "度普利尤单抗", "target": "肖塔", "value": 1}, {"source": "度普利尤单抗", "target": "蔡涛", "value": 1}, {"source": "度普利尤单抗", "target": "刘丽娟", "value": 1}, {"source": "度普利尤单抗", "target": "李欣", "value": 1}, {"source": "度普利尤单抗", "target": "田歆", "value": 1}, {"source": "度普利尤单抗", "target": "韩昌旭", "value": 1}, {"source": "度普利尤单抗", "target": "王莹哲", "value": 1}, {"source": "度普利尤单抗", "target": "马莉", "value": 1}, {"source": "多磺酸粘多糖乳膏", "target": "刘盛秀", "value": 1}, {"source": "多磺酸粘多糖乳膏", "target": "张涛", "value": 1}, {"source": "多磺酸粘多糖乳膏", "target": "薛珂", "value": 1}, {"source": "氘可来昔替尼", "target": "李霞教授", "value": 1}, {"source": "氘可来昔替尼", "target": "姜红浩教授", "value": 1}, {"source": "氘可来昔替尼", "target": "王轶伦教授", "value": 1}, {"source": "氘可来昔替尼", "target": "金怡教授", "value": 1}, {"source": "氘可来昔替尼", "target": "彭霖教授", "value": 1}, {"source": "司普奇拜单抗", "target": "张建中教授", "value": 1}, {"source": "司普奇拜单抗", "target": "张福仁教授", "value": 1}, {"source": "司普奇拜单抗", "target": "常建民教授", "value": 1}, {"source": "司普奇拜单抗", "target": "陈爱军教授", "value": 1}, {"source": "司普奇拜单抗", "target": "顾超颖教授", "value": 1}, {"source": "司普奇拜单抗", "target": "侯李悦教授", "value": 1}, {"source": "司普奇拜单抗", "target": "朱慧兰教授", "value": 1}, {"source": "司普奇拜单抗", "target": "郑跃教授", "value": 1}, {"source": "司普奇拜单抗", "target": "亓玉青教授", "value": 1}, {"source": "司普奇拜单抗", "target": "李智铭教授", "value": 1}, {"source": "司普奇拜单抗", "target": "盛宇俊教授", "value": 1}, {"source": "司普奇拜单抗", "target": "吴佳纹教授", "value": 1}, {"source": "司普奇拜单抗", "target": "夏建新教授", "value": 1}, {"source": "司普奇拜单抗", "target": "沈燕娜教授", "value": 1}, {"source": "司普奇拜单抗", "target": "张小超教授", "value": 1}, {"source": "司普奇拜单抗", "target": "王渟教授", "value": 1}, {"source": "司普奇拜单抗", "target": "肖塔教授", "value": 1}, {"source": "司普奇拜单抗", "target": "叶静静教授", "value": 1}, {"source": "司普奇拜单抗", "target": "蔡涛教授", "value": 1}, {"source": "司普奇拜单抗", "target": "刘丽娟教授", "value": 1}, {"source": "司普奇拜单抗", "target": "李欣教授", "value": 1}, {"source": "司普奇拜单抗", "target": "田歆教授", "value": 1}, {"source": "司普奇拜单抗", "target": "韩昌旭教授", "value": 1}, {"source": "司普奇拜单抗", "target": "王莹哲教授", "value": 1}, {"source": "司普奇拜单抗", "target": "马莉教授", "value": 1}, {"source": "司普奇拜单抗", "target": "刘倩教授", "value": 1}, {"source": "度普利尤单抗", "target": "张建中教授", "value": 1}, {"source": "度普利尤单抗", "target": "张福仁教授", "value": 1}, {"source": "度普利尤单抗", "target": "常建民教授", "value": 1}, {"source": "度普利尤单抗", "target": "陈爱军教授", "value": 1}, {"source": "度普利尤单抗", "target": "顾超颖教授", "value": 1}, {"source": "度普利尤单抗", "target": "侯李悦教授", "value": 1}, {"source": "度普利尤单抗", "target": "朱慧兰教授", "value": 1}, {"source": "度普利尤单抗", "target": "郑跃教授", "value": 1}, {"source": "度普利尤单抗", "target": "亓玉青教授", "value": 1}, {"source": "度普利尤单抗", "target": "李智铭教授", "value": 1}, {"source": "度普利尤单抗", "target": "盛宇俊教授", "value": 1}, {"source": "度普利尤单抗", "target": "吴佳纹教授", "value": 1}, {"source": "度普利尤单抗", "target": "夏建新教授", "value": 1}, {"source": "度普利尤单抗", "target": "沈燕娜教授", "value": 1}, {"source": "度普利尤单抗", "target": "张小超教授", "value": 1}, {"source": "度普利尤单抗", "target": "王渟教授", "value": 1}, {"source": "度普利尤单抗", "target": "肖塔教授", "value": 1}, {"source": "度普利尤单抗", "target": "叶静静教授", "value": 1}, {"source": "度普利尤单抗", "target": "蔡涛教授", "value": 1}, {"source": "度普利尤单抗", "target": "刘丽娟教授", "value": 1}, {"source": "度普利尤单抗", "target": "李欣教授", "value": 1}, {"source": "度普利尤单抗", "target": "田歆教授", "value": 1}, {"source": "度普利尤单抗", "target": "韩昌旭教授", "value": 1}, {"source": "度普利尤单抗", "target": "王莹哲教授", "value": 1}, {"source": "度普利尤单抗", "target": "马莉教授", "value": 1}, {"source": "度普利尤单抗", "target": "刘倩教授", "value": 1}, {"source": "乌帕替尼", "target": "项蕾红", "value": 1}, {"source": "乌帕替尼", "target": "涂平", "value": 1}, {"source": "乌帕替尼", "target": "刘红", "value": 1}, {"source": "乌帕替尼", "target": "吴辛刚", "value": 1}, {"source": "乌帕替尼", "target": "陈静", "value": 1}, {"source": "乌帕替尼", "target": "唐苏为", "value": 1}, {"source": "乌帕替尼", "target": "张江安", "value": 1}, {"source": "乌帕替尼", "target": "林茂", "value": 1}, {"source": "度普利尤单抗", "target": "赵琰", "value": 1}, {"source": "柯美奇拜单", "target": "张建中", "value": 1}, {"source": "柯美奇拜单", "target": "赵琰", "value": 1}, {"source": "阿布昔替尼", "target": "孙振燕", "value": 1}, {"source": "阿布昔替尼", "target": "闵玮", "value": 1}, {"source": "替瑞奇珠单抗", "target": "马学良", "value": 1}, {"source": "司库奇尤单抗", "target": "耿松梅", "value": 1}, {"source": "司库奇尤单抗", "target": "刘晓明", "value": 1}, {"source": "司库奇尤单抗", "target": "王宝玺", "value": 2}, {"source": "司库奇尤单抗", "target": "赵作涛", "value": 1}, {"source": "司库奇尤单抗", "target": "张学军", "value": 2}, {"source": "奥马珠单抗", "target": "耿松梅", "value": 1}, {"source": "奥马珠单抗", "target": "刘晓明", "value": 1}, {"source": "奥马珠单抗", "target": "王宝玺", "value": 1}, {"source": "奥马珠单抗", "target": "赵作涛", "value": 2}, {"source": "奥马珠单抗", "target": "张学军", "value": 1}, {"source": "替瑞奇珠单抗", "target": "樊平申", "value": 1}, {"source": "阿达木单抗", "target": "樊平申", "value": 1}, {"source": "司库奇尤单抗", "target": "樊平申", "value": 1}, {"source": "阿布昔替尼", "target": "宋海祯", "value": 1}, {"source": "阿布昔替尼", "target": "尹斌", "value": 1}, {"source": "替瑞奇珠单抗", "target": "李亚萍", "value": 1}, {"source": "氘可来昔替尼", "target": "于学红", "value": 1}, {"source": "氘可来昔替尼", "target": "王苗苗", "value": 1}, {"source": "氘可来昔替尼", "target": "张卫华", "value": 1}, {"source": "氘可来昔替尼", "target": "马学良", "value": 1}, {"source": "氘可来昔替尼", "target": "范崇帅", "value": 1}, {"source": "古塞奇尤单抗", "target": "刘红", "value": 1}, {"source": "古塞奇尤单抗", "target": "张振颖", "value": 1}, {"source": "古塞奇尤单抗", "target": "陈柳青", "value": 1}, {"source": "古塞奇尤单抗", "target": "邓丹琪教授", "value": 1}, {"source": "古塞奇尤单抗", "target": "丁杨峰教授", "value": 1}, {"source": "古塞奇尤单抗", "target": "涂平教授", "value": 1}, {"source": "替瑞奇珠单抗", "target": "杨森", "value": 1}, {"source": "阿布昔替尼", "target": "韩永春", "value": 1}, {"source": "古塞奇尤单抗", "target": "袁立燕教授", "value": 1}, {"source": "盐酸吉卡昔替尼", "target": "张建中", "value": 1}, {"source": "古塞奇尤单抗", "target": "吴晓雁", "value": 1}, {"source": "氘可来昔替尼", "target": "石春蕊", "value": 1}, {"source": "氘可来昔替尼", "target": "丁杨峰", "value": 1}, {"source": "氘可来昔替尼", "target": "胡祥宇", "value": 1}, {"source": "氘可来昔替尼", "target": "尹志强", "value": 1}, {"source": "氘可来昔替尼", "target": "金怡", "value": 1}, {"source": "阿布昔替尼", "target": "袁海舰", "value": 1}, {"source": "阿布昔替尼", "target": "陈国", "value": 1}, {"source": "克立硼罗", "target": "袁海舰", "value": 1}, {"source": "克立硼罗", "target": "陈国", "value": 1}, {"source": "替瑞奇珠单抗", "target": "祝立丽", "value": 1}, {"source": "古塞奇尤单抗", "target": "孙建方教授", "value": 1}, {"source": "古塞奇尤单抗", "target": "王再兴教授", "value": 1}, {"source": "古塞奇尤单抗", "target": "孙良丹教授", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "林秉奖", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "孟祖东", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "王鲁梅", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "胡莉芳", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "黄卫宁", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "谢倩", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "邹耘", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "吴原", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "孔祥明", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "何彩凤", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "陶茂灿", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "乔建军", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "郑文军", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "张堂德", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "黄长征", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "王峰", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "陈静宇", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "丁宗晃", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "王涧", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "许炎竹", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "宋海祯", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "杜鑫", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "高贵云", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "孙春秋", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "田庆均", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "王培光", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "周强", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "张予晋", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "周峻", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "涂盛安", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "戴叶芹", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "梅韬", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "王丹妮", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "周渐云", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "周培媚", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "许向前", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "何渊民", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "张小婷", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "李菲", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "张娜", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "章星琪", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "于春水", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "罗保香", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "叶艳婷", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "刘晓艳", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "刘应辉", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "任诗峰", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "李玲", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "郑锦芬", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "陈宝清", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "韩凯", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "张慧", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "武松江", "value": 1}, {"source": "司库奇尤单抗", "target": "张建中", "value": 1}, {"source": "司库奇尤单抗", "target": "张福仁", "value": 1}, {"source": "夫那奇珠单抗", "target": "霍仕文", "value": 1}, {"source": "硫酸艾玛昔替尼", "target": "霍仕文", "value": 1}, {"source": "度普利尤单抗", "target": "陈晓栋", "value": 1}, {"source": "度普利尤单抗", "target": "刘红霞", "value": 1}, {"source": "度普利尤单抗", "target": "曾凡钦", "value": 1}, {"source": "度普利尤单抗", "target": "郭庆", "value": 1}, {"source": "度普利尤单抗", "target": "包军", "value": 1}, {"source": "度普利尤单抗", "target": "陈宏翔", "value": 1}, {"source": "度普利尤单抗", "target": "魏庆宇", "value": 1}, {"source": "度普利尤单抗", "target": "陈官芝", "value": 1}, {"source": "氟轻松氢醌维A酸乳膏", "target": "刘全忠", "value": 1}, {"source": "氟轻松氢醌维A酸乳膏", "target": "朱宪彝", "value": 1}, {"source": "替瑞奇珠单抗", "target": "郑敏", "value": 1}, {"source": "莫格利珠单抗", "target": "刘洁", "value": 1}, {"source": "替瑞奇珠单抗", "target": "鲁建云", "value": 1}, {"source": "氘可来昔替尼", "target": "夏建新", "value": 1}, {"source": "氘可来昔替尼", "target": "张蕴颖", "value": 1}, {"source": "氘可来昔替尼", "target": "孙明强", "value": 1}, {"source": "氘可来昔替尼", "target": "崔绍山", "value": 1}, {"source": "氘可来昔替尼", "target": "贾立军", "value": 1}, {"source": "替瑞奇珠单抗", "target": "杨斌", "value": 1}, {"source": "替瑞奇珠单抗", "target": "刘宏业", "value": 1}, {"source": "替瑞奇珠单抗", "target": "袁景奕", "value": 1}, {"source": "替瑞奇珠单抗", "target": "王建波", "value": 1}, {"source": "古塞奇尤单抗", "target": "满孝勇", "value": 1}, {"source": "古塞奇尤单抗", "target": "李薇", "value": 1}, {"source": "古塞奇尤单抗", "target": "刘芳", "value": 1}, {"source": "佩索利单抗", "target": "耿松梅", "value": 1}, {"source": "奥马珠单抗", "target": "郝飞", "value": 1}, {"source": "替瑞奇珠单抗", "target": "陈柳青", "value": 1}, {"source": "替瑞奇珠单抗", "target": "满孝勇", "value": 1}, {"source": "替瑞奇珠单抗", "target": "丁杨峰", "value": 1}, {"source": "替瑞奇珠单抗", "target": "匡叶红", "value": 1}, {"source": "氘可来昔替尼", "target": "刘琴", "value": 1}, {"source": "氘可来昔替尼", "target": "申晨", "value": 1}, {"source": "氘可来昔替尼", "target": "高芸璐", "value": 1}, {"source": "氘可来昔替尼", "target": "贾华魁", "value": 1}, {"source": "氘可来昔替尼", "target": "陈龙", "value": 1}, {"source": "氘可来昔替尼", "target": "李欣", "value": 1}, {"source": "柯美奇拜单抗", "target": "魏爱华", "value": 1}, {"source": "氘可来昔替尼", "target": "任诗峰", "value": 1}, {"source": "氘可来昔替尼", "target": "胡彬", "value": 1}, {"source": "氘可来昔替尼", "target": "杨井", "value": 1}, {"source": "氘可来昔替尼", "target": "吕永梅", "value": 1}, {"source": "氘可来昔替尼", "target": "丁延涛", "value": 1}], "stats": {"total_articles": 85, "total_drugs": 29, "total_kols": 312, "total_pairs": 559}};
+
+let myChart = null;
+
+function initStats() {
+    const stats = rawData.stats;
+    document.getElementById('statsBar').innerHTML =
+        '<div class="stat-item"><div class="label">文章总数</div><div class="value">' + stats.total_articles + '</div></div>' +
+        '<div class="stat-item"><div class="label">药品数量</div><div class="value">' + stats.total_drugs + '</div></div>' +
+        '<div class="stat-item"><div class="label">KOL数量</div><div class="value">' + stats.total_kols + '</div></div>' +
+        '<div class="stat-item"><div class="label">关联对数</div><div class="value">' + stats.total_pairs + '</div></div>';
+}
+
+function getFilteredData() {
+    const kolLimit = parseInt(document.getElementById('kolSlider').value);
+    const searchText = document.getElementById('searchInput').value.trim().toLowerCase();
+    const minLink = parseInt(document.getElementById('minLinkSelect').value);
+
+    // Sort drugs by kol_count descending, KOLs by drug_count descending
+    const allDrugNodes = rawData.nodes.filter(function(n) { return n.type === 'drug'; })
+        .sort(function(a, b) { return b.kol_count - a.kol_count; });
+    const allKolNodes = rawData.nodes.filter(function(n) { return n.type === 'kol'; })
+        .sort(function(a, b) { return b.drug_count - a.drug_count; });
+
+    var filteredKolNodes = allKolNodes.slice(0, kolLimit);
+    var kolNames = new Set(filteredKolNodes.map(function(n) { return n.name; }));
+
+    var filteredLinks = rawData.links.filter(function(l) {
+        if (l.value < minLink) return false;
+        if (!kolNames.has(l.target)) return false;
+        return true;
+    });
+
+    if (searchText) {
+        var matchingDrugs = new Set(allDrugNodes.filter(function(n) { return n.name.toLowerCase().indexOf(searchText) >= 0; }).map(function(n) { return n.name; }));
+        var matchingKols = new Set(filteredKolNodes.filter(function(n) { return n.name.toLowerCase().indexOf(searchText) >= 0; }).map(function(n) { return n.name; }));
+
+        var connectedLinks = filteredLinks.filter(function(l) {
+            return matchingDrugs.has(l.source) || matchingKols.has(l.target);
+        });
+
+        if (connectedLinks.length > 0) {
+            filteredLinks = connectedLinks;
+            var usedDrugs = new Set(connectedLinks.map(function(l) { return l.source; }));
+            var usedKols = new Set(connectedLinks.map(function(l) { return l.target; }));
+            return {
+                drugNodes: allDrugNodes.filter(function(n) { return usedDrugs.has(n.name); }),
+                kolNodes: filteredKolNodes.filter(function(n) { return usedKols.has(n.name); }),
+                links: filteredLinks
+            };
+        }
+    }
+
+    var usedDrugs = new Set(filteredLinks.map(function(l) { return l.source; }));
+    var usedKols = new Set(filteredLinks.map(function(l) { return l.target; }));
+
+    return {
+        drugNodes: allDrugNodes.filter(function(n) { return usedDrugs.has(n.name); }),
+        kolNodes: filteredKolNodes.filter(function(n) { return usedKols.has(n.name); }),
+        links: filteredLinks
+    };
+}
+
+function buildSankeyData(filtered) {
+    var echartsNodes = [];
+
+    filtered.drugNodes.forEach(function(node) {
+        echartsNodes.push({
+            name: node.name,
+            depth: 0,
+            itemStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                    { offset: 0, color: '#5B8FF9' },
+                    { offset: 1, color: '#3D6FCC' }
+                ]),
+                borderColor: '#2B5BA8',
+                borderWidth: 1
+            },
+            label: {
+                show: true,
+                position: 'left',
+                formatter: function() {
+                    return '{name|' + node.name + '}\n{sub|关联' + node.kol_count + '位KOL | ' + node.count + '篇}';
+                },
+                rich: {
+                    name: { fontSize: 13, fontWeight: 'bold', color: '#333', lineHeight: 20 },
+                    sub: { fontSize: 11, color: '#999', lineHeight: 16 }
+                }
+            },
+            _rawData: node
+        });
+    });
+
+    filtered.kolNodes.forEach(function(node) {
+        echartsNodes.push({
+            name: node.name,
+            depth: 1,
+            itemStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                    { offset: 0, color: '#F6BD16' },
+                    { offset: 1, color: '#D9A20A' }
+                ]),
+                borderColor: '#B8860B',
+                borderWidth: 1
+            },
+            label: {
+                show: true,
+                position: 'right',
+                formatter: function() {
+                    return '{name|' + node.name + '}\n{sub|关联' + node.drug_count + '种药品}';
+                },
+                rich: {
+                    name: { fontSize: 12, fontWeight: 'bold', color: '#333', lineHeight: 18 },
+                    sub: { fontSize: 10, color: '#999', lineHeight: 14 }
+                }
+            },
+            _rawData: node
+        });
+    });
+
+    var echartsLinks = filtered.links.map(function(l) {
+        return {
+            source: l.source,
+            target: l.target,
+            value: l.value,
+            lineStyle: {
+                color: 'gradient',
+                opacity: 0.4,
+                curveness: 0.5
+            }
+        };
+    });
+
+    return { nodes: echartsNodes, links: echartsLinks };
+}
+
+function renderChart() {
+    var filtered = getFilteredData();
+    var sankeyData = buildSankeyData(filtered);
+
+    var option = {
+        tooltip: {
+            trigger: 'item',
+            triggerOn: 'mousemove',
+            formatter: function(params) {
+                if (params.dataType === 'node') {
+                    var d = params.data._rawData;
+                    if (d.type === 'drug') {
+                        return '<div style="font-weight:bold;font-size:14px;margin-bottom:4px;">' + d.name + '</div>' +
+                               '<div>类型: 药品</div>' +
+                               '<div>出现文章数: ' + d.count + ' 篇</div>' +
+                               '<div>关联KOL数: ' + d.kol_count + ' 位</div>';
+                    } else {
+                        return '<div style="font-weight:bold;font-size:14px;margin-bottom:4px;">' + d.name + '</div>' +
+                               '<div>类型: KOL</div>' +
+                               '<div>关联药品数: ' + d.drug_count + ' 种</div>';
+                    }
+                } else if (params.dataType === 'edge') {
+                    return '<div style="font-weight:bold;">' + params.data.source + ' → ' + params.data.target + '</div>' +
+                           '<div>共同出现文章数: ' + params.data.value + ' 篇</div>';
+                }
+                return '';
+            }
+        },
+        series: [{
+            type: 'sankey',
+            data: sankeyData.nodes,
+            links: sankeyData.links,
+            left: 200,
+            right: 200,
+            top: 20,
+            bottom: 20,
+            nodeWidth: 22,
+            nodeGap: 8,
+            nodeAlign: 'justify',
+            layoutIterations: 0,
+            orient: 'horizontal',
+            draggable: true,
+            emphasis: {
+                focus: 'adjacency',
+                blurScope: 'coordinateSystem'
+            },
+            label: {
+                show: true
+            },
+            lineStyle: {
+                color: 'gradient',
+                curveness: 0.5,
+                opacity: 0.35
+            },
+            levels: [{
+                depth: 0,
+                itemStyle: { color: '#5B8FF9' },
+                lineStyle: { color: 'gradient', opacity: 0.4 }
+            }, {
+                depth: 1,
+                itemStyle: { color: '#F6BD16' },
+                lineStyle: { color: 'gradient', opacity: 0.4 }
+            }],
+            animationDuration: 1000,
+            animationEasing: 'cubicOut'
+        }]
+    };
+
+    if (myChart) {
+        myChart.dispose();
+    }
+    myChart = echarts.init(document.getElementById('chart'));
+    myChart.setOption(option);
+
+    myChart.off('click');
+    myChart.on('click', function(params) {
+        if (params.dataType === 'node') {
+            showInfoPanel(params.data._rawData);
+        }
+    });
+
+    var totalNodes = sankeyData.nodes.length;
+    var calculatedHeight = Math.max(600, totalNodes * 18);
+    document.getElementById('chart').style.height = calculatedHeight + 'px';
+    myChart.resize();
+}
+
+function showInfoPanel(node) {
+    var panel = document.getElementById('infoPanel');
+    var title = document.getElementById('infoTitle');
+    var content = document.getElementById('infoContent');
+
+    title.textContent = node.name;
+
+    var connectedLinks = rawData.links.filter(function(l) {
+        return l.source === node.name || l.target === node.name;
+    });
+
+    var html = '';
+    if (node.type === 'drug') {
+        html += '<div style="margin-bottom:8px;"><span class="tag tag-drug">药品</span> ' +
+                '出现文章数: <strong>' + node.count + '</strong> 篇 | ' +
+                '关联KOL数: <strong>' + node.kol_count + '</strong> 位</div>';
+
+        var kolLinks = connectedLinks
+            .filter(function(l) { return l.source === node.name; })
+            .sort(function(a, b) { return b.value - a.value; })
+            .slice(0, 30);
+
+        if (kolLinks.length > 0) {
+            html += '<div>关联KOL (前30位):</div><div>';
+            kolLinks.forEach(function(l) {
+                html += '<span class="tag tag-kol">' + l.target + ' (' + l.value + '篇)</span>';
+            });
+            html += '</div>';
+        }
+    } else {
+        html += '<div style="margin-bottom:8px;"><span class="tag tag-kol">KOL</span> ' +
+                '关联药品数: <strong>' + node.drug_count + '</strong> 种</div>';
+
+        var drugLinks = connectedLinks
+            .filter(function(l) { return l.target === node.name; })
+            .sort(function(a, b) { return b.value - a.value; });
+
+        if (drugLinks.length > 0) {
+            html += '<div>关联药品:</div><div>';
+            drugLinks.forEach(function(l) {
+                html += '<span class="tag tag-drug">' + l.source + ' (' + l.value + '篇)</span>';
+            });
+            html += '</div>';
+        }
+    }
+
+    content.innerHTML = html;
+    panel.classList.add('active');
+}
+
+function resetFilters() {
+    document.getElementById('kolSlider').value = 50;
+    document.getElementById('kolValue').textContent = '50';
+    document.getElementById('searchInput').value = '';
+    document.getElementById('minLinkSelect').value = '1';
+    document.getElementById('infoPanel').classList.remove('active');
+    renderChart();
+}
+
+document.getElementById('kolSlider').addEventListener('input', function() {
+    document.getElementById('kolValue').textContent = this.value;
+});
+
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') renderChart();
+});
+
+window.addEventListener('resize', function() {
+    if (myChart) myChart.resize();
+});
+
+initStats();
+renderChart();
+</script>
+
+</body>
+</html>

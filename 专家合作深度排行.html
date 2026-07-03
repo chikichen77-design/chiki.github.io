@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOL×品牌合作 - 专家合作深度排行</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f5f7fa;
+    color: #333;
+    min-height: 100vh;
+}
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 32px;
+}
+.breadcrumb { font-size: 12px; opacity: 0.9; margin-bottom: 6px; }
+.breadcrumb .plugin-tag {
+    background: rgba(255,255,255,0.25);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin-left: 6px;
+}
+.header h1 { font-size: 22px; font-weight: 700; }
+.controls {
+    background: white;
+    padding: 14px 32px;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #e8e8e8;
+}
+.control-group { display: flex; align-items: center; gap: 8px; }
+.control-group label { font-size: 13px; color: #666; white-space: nowrap; font-weight: 500; }
+.control-group select, .control-group input[type="text"] {
+    padding: 6px 12px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+    background: white;
+}
+.control-group input[type="text"] { width: 220px; }
+.control-group input[type="text"]:focus, .control-group select:focus { border-color: #667eea; }
+
+.kpi-row {
+    display: flex;
+    gap: 16px;
+    padding: 16px 32px;
+    flex-wrap: wrap;
+}
+.kpi-card {
+    background: white;
+    border-radius: 10px;
+    padding: 18px 24px;
+    flex: 1;
+    min-width: 180px;
+    border-top: 3px solid #667eea;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.kpi-card.alt { border-top-color: #F6BD16; }
+.kpi-card.alt2 { border-top-color: #5B8FF9; }
+.kpi-card .value { font-size: 30px; font-weight: 700; line-height: 1.2; }
+.kpi-card .label { font-size: 12px; color: #888; margin-top: 4px; }
+
+.main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 0 32px 16px;
+}
+.panel {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    overflow: hidden;
+}
+.panel-header {
+    padding: 12px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fafbfc;
+}
+.panel-title {
+    font-size: 15px;
+    font-weight: 700;
+    padding-left: 10px;
+    border-left: 4px solid #667eea;
+    line-height: 1.2;
+}
+.panel-title.drug { border-left-color: #F6BD16; }
+.panel-subtitle { font-size: 12px; color: #888; margin-top: 4px; padding-left: 14px; }
+
+.row {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    border-bottom: 1px solid #f5f5f5;
+    gap: 12px;
+}
+.row:hover { background: #fafbff; }
+.row:last-child { border-bottom: none; }
+.rank {
+    width: 36px;
+    text-align: right;
+    font-size: 14px;
+    color: #999;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+.rank.gold { color: #d4a017; font-weight: 700; }
+.name {
+    width: 120px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.bar-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 80px;
+}
+.bar {
+    height: 10px;
+    background: linear-gradient(90deg, #5B5BD6 0%, #7B7BD8 100%);
+    border-radius: 5px;
+    min-width: 12px;
+    flex: 1;
+}
+.bar.gold { background: linear-gradient(90deg, #d4a017 0%, #e8b830 100%); }
+.bar.yellow { background: linear-gradient(90deg, #F6BD16 0%, #FFD43B 100%); }
+.count {
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+    flex-shrink: 0;
+    min-width: 50px;
+    text-align: right;
+}
+.count .unit { font-size: 11px; color: #888; font-weight: 400; margin-left: 2px; }
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    flex: 2;
+    min-width: 100px;
+    max-height: 60px;
+    overflow: hidden;
+}
+.tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    white-space: nowrap;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    border: 1.5px solid transparent;
+}
+.tag:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    filter: brightness(1.08);
+}
+.tag:active {
+    transform: translateY(0);
+}
+.tag.active {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 2px rgba(102,126,234,0.3);
+    font-weight: 700;
+}
+.tag.d1 { background: #E8DAEF; color: #6c3483; }
+.tag.d2 { background: #D5F5E3; color: #1e8449; }
+.tag.d3 { background: #FADBD8; color: #c0392b; }
+.tag.d4 { background: #D6EAF8; color: #2874a6; }
+.tag.d5 { background: #FCF3CF; color: #9a7d0a; }
+.tag.d6 { background: #F5CBA7; color: #a04000; }
+.tag.d7 { background: #ABEBC6; color: #196f3d; }
+.tag.d8 { background: #AED6F1; color: #1f618d; }
+.tag.more { background: #f0f0f0; color: #888; }
+.search-hl { background: #FFF59D; padding: 0 2px; border-radius: 2px; }
+.filter-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 32px;
+    background: #f0f4ff;
+    border-bottom: 1px solid #d0d8f0;
+}
+.clear-btn {
+    margin-left: auto;
+    padding: 4px 14px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.clear-btn:hover { background: #5a6fd8; }
+
+.group-section {
+    padding: 0 20px 12px;
+}
+.group-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    margin-top: 10px;
+}
+.group-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+}
+.group-count { font-size: 12px; color: #666; }
+.group-names {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding: 8px 12px;
+    font-size: 12px;
+    line-height: 1.6;
+}
+.bottom-panel {
+    margin: 0 32px 24px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    overflow: hidden;
+}
+.footer {
+    text-align: center;
+    padding: 16px;
+    color: #999;
+    font-size: 12px;
+}
+@media (max-width: 980px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .name { width: 100px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="breadcrumb">3.6.2 KOL×品牌合作-专家合作深度 <span class="plugin-tag">插件</span></div>
+    <h1 id="mainTitle">商业化KOL合作排行</h1>
+</div>
+
+<div class="controls">
+    <div class="control-group">
+        <label>显示合作频次≥:</label>
+        <select id="freqFilter">
+            <option value="1">1次</option>
+            <option value="2" selected>2次</option>
+            <option value="3">3次</option>
+        </select>
+    </div>
+    <div class="control-group">
+        <label>Top显示数量:</label>
+        <select id="topN">
+            <option value="10" selected>前10位</option>
+            <option value="15">前15位</option>
+            <option value="20">前20位</option>
+            <option value="30">前30位</option>
+        </select>
+    </div>
+    <div class="control-group">
+        <label>搜索:</label>
+        <input type="text" id="searchInput" placeholder="输入KOL或药品名称...">
+    </div>
+    <div class="control-group" style="margin-left:auto;color:#999;font-size:12px;">
+        点击标签/名称可快速筛选，再次点击取消
+    </div>
+</div>
+
+<div class="filter-bar" id="filterBar"></div>
+
+<div class="kpi-row" id="kpiRow"></div>
+
+<div class="main-grid">
+    <div class="panel">
+        <div class="panel-header">
+            <div class="panel-title">专家排行（按关联药品数）</div>
+            <div class="panel-subtitle" id="kolSubtitle"></div>
+        </div>
+        <div id="kolSection"></div>
+    </div>
+    <div class="panel">
+        <div class="panel-header">
+            <div class="panel-title drug">药品品牌排行（按关联KOL数）</div>
+            <div class="panel-subtitle" id="drugSubtitle"></div>
+        </div>
+        <div id="drugSection"></div>
+    </div>
+</div>
+
+<div class="panel bottom-panel">
+    <div class="panel-header">
+        <div class="panel-title">合作频次 1次 KOL - 按品牌聚合</div>
+        <div class="panel-subtitle" id="groupSubtitle"></div>
+    </div>
+    <div id="groupSection"></div>
+</div>
+
+<div class="footer">
+    数据来源: 商业化，药品×KOL 0703.xlsx | 筛选条件: 商业化合作=商业化, 药品名称≠无/空, KOL姓名≠无/空
+</div>
+
+<script>
+const rawData = {"kol_ranked": [{"name": "张学军", "drug_count": 9, "drugs": ["乌帕替尼", "利特昔替尼", "匹康奇拜单抗", "古塞奇尤单抗", "司库奇尤单抗", "奥马珠单抗", "替瑞奇珠单抗", "芦可替尼", "阿布昔替尼"]}, {"name": "吴文育", "drug_count": 7, "drugs": ["乌帕替尼", "利特昔替尼", "夫那奇珠单抗", "奥马珠单抗", "度普利尤单抗", "比奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "张建中", "drug_count": 7, "drugs": ["司库奇尤单抗", "司普奇拜单抗", "度普利尤单抗", "拉那利尤单抗", "柯美奇拜单", "盐酸吉卡昔替尼", "阿布昔替尼"]}, {"name": "周城", "drug_count": 5, "drugs": ["乌帕替尼", "利特昔替尼", "奥马珠单抗", "度普利尤单抗", "硫酸艾玛昔替尼"]}, {"name": "张锡宝", "drug_count": 5, "drugs": ["乌帕替尼", "夫那奇珠单抗", "度普利尤单抗", "拉那利尤单抗", "硫酸艾玛昔替尼"]}, {"name": "徐金华", "drug_count": 5, "drugs": ["依若奇单抗", "司库奇尤单抗", "夫那奇珠单抗", "拉那利尤单抗", "赛立奇单抗"]}, {"name": "魏爱华", "drug_count": 5, "drugs": ["夫那奇珠单抗", "度普利尤单抗", "拉那利尤单抗", "柯美奇拜单抗", "硫酸艾玛昔替尼"]}, {"name": "刘玉梅", "drug_count": 4, "drugs": ["乌帕替尼", "夫那奇珠单抗", "度普利尤单抗", "硫酸艾玛昔替尼"]}, {"name": "夏建新", "drug_count": 4, "drugs": ["乌帕替尼", "司普奇拜单抗", "度普利尤单抗", "氘可来昔替尼"]}, {"name": "张浩", "drug_count": 4, "drugs": ["乌帕替尼", "夫那奇珠单抗", "度普利尤单抗", "硫酸艾玛昔替尼"]}, {"name": "李巍", "drug_count": 4, "drugs": ["乌帕替尼", "夫那奇珠单抗", "度普利尤单抗", "硫酸艾玛昔替尼"]}, {"name": "李智铭", "drug_count": 4, "drugs": ["司普奇拜单抗", "夫那奇珠单抗", "度普利尤单抗", "硫酸艾玛昔替尼"]}, {"name": "林茂", "drug_count": 4, "drugs": ["乌帕替尼", "利特昔替尼", "硫酸艾玛昔替尼", "艾玛昔替尼"]}, {"name": "沈燕娜", "drug_count": 4, "drugs": ["司普奇拜单抗", "夫那奇珠单抗", "度普利尤单抗", "硫酸艾玛昔替尼"]}, {"name": "满孝勇", "drug_count": 4, "drugs": ["古塞奇尤单抗", "夫那奇珠单抗", "替瑞奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "耿松梅", "drug_count": 4, "drugs": ["佩索利单抗", "司库奇尤单抗", "奥马珠单抗", "氘可来昔替尼"]}, {"name": "陈爱军", "drug_count": 4, "drugs": ["司普奇拜单抗", "夫那奇珠单抗", "度普利尤单抗", "硫酸艾玛昔替尼"]}, {"name": "丁杨峰", "drug_count": 3, "drugs": ["古塞奇尤单抗", "替瑞奇珠单抗", "氘可来昔替尼"]}, {"name": "常建民", "drug_count": 3, "drugs": ["司普奇拜单抗", "度普利尤单抗", "比奇珠单抗"]}, {"name": "张丽", "drug_count": 3, "drugs": ["乌帕替尼", "度普利尤单抗", "阿布昔替尼"]}, {"name": "张振颖", "drug_count": 3, "drugs": ["古塞奇尤单抗", "夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "张福仁", "drug_count": 3, "drugs": ["司库奇尤单抗", "司普奇拜单抗", "度普利尤单抗"]}, {"name": "李亚萍", "drug_count": 3, "drugs": ["替瑞奇珠单抗", "硫酸艾玛昔替尼", "艾玛昔替尼"]}, {"name": "李林", "drug_count": 3, "drugs": ["夫那奇珠单抗", "氘可来昔替尼", "硫酸艾玛昔替尼"]}, {"name": "李欣", "drug_count": 3, "drugs": ["司普奇拜单抗", "度普利尤单抗", "氘可来昔替尼"]}, {"name": "李薇", "drug_count": 3, "drugs": ["古塞奇尤单抗", "夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "杨井", "drug_count": 3, "drugs": ["夫那奇珠单抗", "氘可来昔替尼", "硫酸艾玛昔替尼"]}, {"name": "林尽染", "drug_count": 3, "drugs": ["乌帕替尼", "利特昔替尼", "硫酸艾玛昔替尼"]}, {"name": "樊平申", "drug_count": 3, "drugs": ["司库奇尤单抗", "替瑞奇珠单抗", "阿达木单抗"]}, {"name": "涂平", "drug_count": 3, "drugs": ["乌帕替尼", "古塞奇尤单抗", "度普利尤单抗"]}, {"name": "王再兴", "drug_count": 3, "drugs": ["古塞奇尤单抗", "夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "盛宇俊", "drug_count": 3, "drugs": ["司普奇拜单抗", "度普利尤单抗", "芦可替尼"]}, {"name": "谢君", "drug_count": 3, "drugs": ["乌帕替尼", "硫酸艾玛昔替尼", "艾玛昔替尼"]}, {"name": "赵作涛", "drug_count": 3, "drugs": ["司库奇尤单抗", "奥马珠单抗", "度普利尤单抗"]}, {"name": "邓丹琪", "drug_count": 3, "drugs": ["古塞奇尤单抗", "夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "陈宏翔", "drug_count": 3, "drugs": ["夫那奇珠单抗", "度普利尤单抗", "硫酸艾玛昔替尼"]}, {"name": "陈柳青", "drug_count": 3, "drugs": ["古塞奇尤单抗", "替瑞奇珠单抗", "比奇珠单抗"]}, {"name": "陶娟", "drug_count": 3, "drugs": ["夫那奇珠单抗", "度普利尤单抗", "硫酸艾玛昔替尼"]}, {"name": "高芸璐", "drug_count": 3, "drugs": ["夫那奇珠单抗", "氘可来昔替尼", "硫酸艾玛昔替尼"]}, {"name": "丁晓琴", "drug_count": 2, "drugs": ["司库奇尤单抗", "阿布昔替尼"]}, {"name": "万慧颖", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "于波", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "亓玉清", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "亓玉青", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "任诗峰", "drug_count": 2, "drugs": ["氘可来昔替尼", "硫酸艾玛昔替尼"]}, {"name": "余晓玲", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "侯李悦", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "党林", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "冉玉平", "drug_count": 2, "drugs": ["氘可来昔替尼", "硫酸艾玛昔替尼"]}, {"name": "刘丽娟", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "刘倩", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "刘国英", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "刘晓明", "drug_count": 2, "drugs": ["司库奇尤单抗", "奥马珠单抗"]}, {"name": "刘湘", "drug_count": 2, "drugs": ["硫酸艾玛昔替尼", "艾玛昔替尼"]}, {"name": "刘红", "drug_count": 2, "drugs": ["乌帕替尼", "古塞奇尤单抗"]}, {"name": "刘钟", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "叶振杰", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "叶静静", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "向妞", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "吴佳纹", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "吴志华", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "吴玮", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "周焰", "drug_count": 2, "drugs": ["司库奇尤单抗", "阿布昔替尼"]}, {"name": "奚丹", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "姚凤鸣", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "孙毅", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "孙秀坤", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "宋海祯", "drug_count": 2, "drugs": ["硫酸艾玛昔替尼", "阿布昔替尼"]}, {"name": "尚元元", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "张小超", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "张弘", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "张春雷", "drug_count": 2, "drugs": ["乌帕替尼", "度普利尤单抗"]}, {"name": "张桂英", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "张理涛", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "方红", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "施为", "drug_count": 2, "drugs": ["利特昔替尼", "硫酸艾玛昔替尼"]}, {"name": "景海霞", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "朱慧兰", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "李亚丽", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "李伟", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "杜娟", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "杨孔超", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "林冠廷", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "林立航", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "武瑞芳", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "江从军", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "熊霞", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "王一枫", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "王傲雪", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "王友力", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "王友发", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "王宝玺", "drug_count": 2, "drugs": ["司库奇尤单抗", "奥马珠单抗"]}, {"name": "王建有", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "王建琴", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "王晓华", "drug_count": 2, "drugs": ["替瑞奇珠单抗", "阿达木单抗"]}, {"name": "王渟", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "王福喜", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "王美燕", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "王莹哲", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "王际童", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "田歆", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "田黎明", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "罗双艳", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "肖塔", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "胡秋伟", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "胡荣欣", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "蒋震", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "蔡涛", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "袁海舰", "drug_count": 2, "drugs": ["克立硼罗", "阿布昔替尼"]}, {"name": "谢玲", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "贾建恒", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "赵俊", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "赵琰", "drug_count": 2, "drugs": ["度普利尤单抗", "柯美奇拜单"]}, {"name": "赵航", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "邹颖", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "郑文军", "drug_count": 2, "drugs": ["硫酸艾玛昔替尼", "艾玛昔替尼"]}, {"name": "郑跃", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "钟华杰", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "钟雨", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "阮黎明", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "陆原", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "陈国", "drug_count": 2, "drugs": ["克立硼罗", "阿布昔替尼"]}, {"name": "陈学军", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "陈文琦", "drug_count": 2, "drugs": ["他克莫司", "阿布昔替尼"]}, {"name": "陈海江", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "陈瑾", "drug_count": 2, "drugs": ["乌帕替尼", "度普利尤单抗"]}, {"name": "陈贤祯", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "霍仕文", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "韩昌旭", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "顾超颖", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "顾颖颖", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "马一平", "drug_count": 2, "drugs": ["他克莫司", "阿布昔替尼"]}, {"name": "马学良", "drug_count": 2, "drugs": ["替瑞奇珠单抗", "氘可来昔替尼"]}, {"name": "马莉", "drug_count": 2, "drugs": ["司普奇拜单抗", "度普利尤单抗"]}, {"name": "鲁严", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "黄艳春", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "龚锦", "drug_count": 2, "drugs": ["夫那奇珠单抗", "硫酸艾玛昔替尼"]}, {"name": "Elizabeth A. Kiracofe", "drug_count": 1, "drugs": ["度普利尤单抗"]}, {"name": "Sarina Elmariah", "drug_count": 1, "drugs": ["度普利尤单抗"]}, {"name": "丁宗晃", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "丁延涛", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "乔建军", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "于学红", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "于春水", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "何彩凤", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "何渊民", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "何黎", "drug_count": 1, "drugs": ["比奇珠单抗"]}, {"name": "刘全忠", "drug_count": 1, "drugs": ["氟轻松氢醌维A酸乳膏"]}, {"name": "刘宏业", "drug_count": 1, "drugs": ["替瑞奇珠单抗"]}, {"name": "刘岩", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "刘应辉", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "刘晓", "drug_count": 1, "drugs": ["阿布昔替尼"]}, {"name": "刘晓艳", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "刘洁", "drug_count": 1, "drugs": ["莫格利珠单抗"]}, {"name": "刘琴", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "刘盛秀", "drug_count": 1, "drugs": ["多磺酸粘多糖乳膏"]}, {"name": "刘红霞", "drug_count": 1, "drugs": ["度普利尤单抗"]}, {"name": "刘芳", "drug_count": 1, "drugs": ["古塞奇尤单抗"]}, {"name": "包军", "drug_count": 1, "drugs": ["度普利尤单抗"]}, {"name": "匡叶红", "drug_count": 1, "drugs": ["替瑞奇珠单抗"]}, {"name": "史玉玲", "drug_count": 1, "drugs": ["匹康奇拜单抗"]}, {"name": "叶艳婷", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "吕永梅", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "吴原", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "吴晓雁", "drug_count": 1, "drugs": ["古塞奇尤单抗"]}, {"name": "吴辛刚", "drug_count": 1, "drugs": ["乌帕替尼"]}, {"name": "周培媚", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "周峻", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "周强", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "周渐云", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "唐苏为", "drug_count": 1, "drugs": ["乌帕替尼"]}, {"name": "喻楠", "drug_count": 1, "drugs": ["拉那利尤单抗"]}, {"name": "姜红浩", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "孔祥明", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "孙建方", "drug_count": 1, "drugs": ["古塞奇尤单抗"]}, {"name": "孙振燕", "drug_count": 1, "drugs": ["阿布昔替尼"]}, {"name": "孙明强", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "孙春秋", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "孙良丹", "drug_count": 1, "drugs": ["古塞奇尤单抗"]}, {"name": "孙青", "drug_count": 1, "drugs": ["度普利尤单抗"]}, {"name": "孟祖东", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "尹志强", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "尹斌", "drug_count": 1, "drugs": ["阿布昔替尼"]}, {"name": "崔绍山", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "张予晋", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "张卫华", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "张堂德", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "张娜", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "张小婷", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "张慧", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "张江安", "drug_count": 1, "drugs": ["乌帕替尼"]}, {"name": "张涛", "drug_count": 1, "drugs": ["多磺酸粘多糖乳膏"]}, {"name": "张蕴颖", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "彭霖", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "戴叶芹", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "方方", "drug_count": 1, "drugs": ["比奇珠单抗"]}, {"name": "晋红中", "drug_count": 1, "drugs": ["比奇珠单抗"]}, {"name": "曾凡钦", "drug_count": 1, "drugs": ["度普利尤单抗"]}, {"name": "朱可建", "drug_count": 1, "drugs": ["替瑞奇珠单抗"]}, {"name": "朱宪彝", "drug_count": 1, "drugs": ["氟轻松氢醌维A酸乳膏"]}, {"name": "李玲", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "李菲", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "李霞", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "李静", "drug_count": 1, "drugs": ["阿布昔替尼"]}, {"name": "杜鑫", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "杨斌", "drug_count": 1, "drugs": ["替瑞奇珠单抗"]}, {"name": "杨森", "drug_count": 1, "drugs": ["替瑞奇珠单抗"]}, {"name": "杨青", "drug_count": 1, "drugs": ["匹康奇拜单抗"]}, {"name": "林志淼", "drug_count": 1, "drugs": ["度普利尤单抗"]}, {"name": "林秉奖", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "林英翔", "drug_count": 1, "drugs": ["度普利尤单抗"]}, {"name": "梅韬", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "武松江", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "涂盛安", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "王丹妮", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "王培光", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "王峰", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "王建波", "drug_count": 1, "drugs": ["替瑞奇珠单抗"]}, {"name": "王文慧", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "王晓阳", "drug_count": 1, "drugs": ["度普利尤单抗"]}, {"name": "王涧", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "王秀丽", "drug_count": 1, "drugs": ["比奇珠单抗"]}, {"name": "王苗苗", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "王轶伦", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "王鲁梅", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "田庆均", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "申晨", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "石春蕊", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "祝立丽", "drug_count": 1, "drugs": ["替瑞奇珠单抗"]}, {"name": "章星琪", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "罗保香", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "罗娜", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "胡彬", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "胡祥宇", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "胡莉芳", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "范崇帅", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "薛珂", "drug_count": 1, "drugs": ["多磺酸粘多糖乳膏"]}, {"name": "袁景奕", "drug_count": 1, "drugs": ["替瑞奇珠单抗"]}, {"name": "袁立燕", "drug_count": 1, "drugs": ["古塞奇尤单抗"]}, {"name": "许向前", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "许炎竹", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "谢倩", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "贾华魁", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "贾立军", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "邓娅", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "邹耘", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "郑敏", "drug_count": 1, "drugs": ["替瑞奇珠单抗"]}, {"name": "郑锦芬", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "郝飞", "drug_count": 1, "drugs": ["奥马珠单抗"]}, {"name": "郭庆", "drug_count": 1, "drugs": ["度普利尤单抗"]}, {"name": "金怡", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "闫言", "drug_count": 1, "drugs": ["比奇珠单抗"]}, {"name": "闵玮", "drug_count": 1, "drugs": ["阿布昔替尼"]}, {"name": "陈官芝", "drug_count": 1, "drugs": ["度普利尤单抗"]}, {"name": "陈宝清", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "陈晓栋", "drug_count": 1, "drugs": ["度普利尤单抗"]}, {"name": "陈静", "drug_count": 1, "drugs": ["乌帕替尼"]}, {"name": "陈静宇", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "陈龙", "drug_count": 1, "drugs": ["氘可来昔替尼"]}, {"name": "陶茂灿", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "鞠强", "drug_count": 1, "drugs": ["比奇珠单抗"]}, {"name": "韩凯", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "韩永春", "drug_count": 1, "drugs": ["阿布昔替尼"]}, {"name": "项蕾红", "drug_count": 1, "drugs": ["乌帕替尼"]}, {"name": "马琳", "drug_count": 1, "drugs": ["度普利尤单抗"]}, {"name": "高贵云", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "魏庆宇", "drug_count": 1, "drugs": ["度普利尤单抗"]}, {"name": "鲁建云", "drug_count": 1, "drugs": ["替瑞奇珠单抗"]}, {"name": "黄卫宁", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}, {"name": "黄长征", "drug_count": 1, "drugs": ["硫酸艾玛昔替尼"]}], "drug_ranked": [{"name": "硫酸艾玛昔替尼", "kol_count": 139, "kols": ["丁宗晃", "万慧颖", "乔建军", "于春水", "于波", "任诗峰", "何彩凤", "何渊民", "余晓玲", "党林", "冉玉平", "刘国英", "刘应辉", "刘晓艳", "刘湘", "刘玉梅", "刘钟", "叶振杰", "叶艳婷", "向妞", "吴原", "吴志华", "吴文育", "吴玮", "周城", "周培媚", "周峻", "周强", "周渐云", "奚丹", "姚凤鸣", "孔祥明", "孙春秋", "孙毅", "孙秀坤", "孟祖东", "宋海祯", "尚元元", "张予晋", "张堂德", "张娜", "张小婷", "张弘", "张慧", "张振颖", "张桂英", "张浩", "张理涛", "张锡宝", "戴叶芹", "方红", "施为", "景海霞", "李亚丽", "李亚萍", "李伟", "李巍", "李智铭", "李林", "李玲", "李菲", "李薇", "杜娟", "杜鑫", "杨井", "杨孔超", "林冠廷", "林尽染", "林秉奖", "林立航", "林茂", "梅韬", "武松江", "武瑞芳", "江从军", "沈燕娜", "涂盛安", "满孝勇", "熊霞", "王一枫", "王丹妮", "王傲雪", "王再兴", "王友力", "王友发", "王培光", "王峰", "王建有", "王建琴", "王涧", "王福喜", "王美燕", "王际童", "王鲁梅", "田庆均", "田黎明", "章星琪", "罗保香", "罗双艳", "胡秋伟", "胡荣欣", "胡莉芳", "蒋震", "许向前", "许炎竹", "谢倩", "谢君", "谢玲", "贾建恒", "赵俊", "赵航", "邓丹琪", "邹耘", "邹颖", "郑文军", "郑锦芬", "钟华杰", "钟雨", "阮黎明", "陆原", "陈学军", "陈宏翔", "陈宝清", "陈海江", "陈爱军", "陈贤祯", "陈静宇", "陶娟", "陶茂灿", "霍仕文", "韩凯", "高芸璐", "高贵云", "魏爱华", "鲁严", "黄卫宁", "黄艳春", "黄长征", "龚锦"]}, {"name": "夫那奇珠单抗", "kol_count": 79, "kols": ["万慧颖", "于波", "余晓玲", "党林", "刘国英", "刘玉梅", "刘钟", "叶振杰", "向妞", "吴志华", "吴文育", "吴玮", "奚丹", "姚凤鸣", "孙毅", "孙秀坤", "尚元元", "张弘", "张振颖", "张桂英", "张浩", "张理涛", "张锡宝", "徐金华", "方红", "景海霞", "李亚丽", "李伟", "李巍", "李智铭", "李林", "李薇", "杜娟", "杨井", "杨孔超", "林冠廷", "林立航", "武瑞芳", "江从军", "沈燕娜", "满孝勇", "熊霞", "王一枫", "王傲雪", "王再兴", "王友力", "王友发", "王建有", "王建琴", "王福喜", "王美燕", "王际童", "田黎明", "罗双艳", "胡秋伟", "胡荣欣", "蒋震", "谢玲", "贾建恒", "赵俊", "赵航", "邓丹琪", "邹颖", "钟华杰", "钟雨", "阮黎明", "陆原", "陈学军", "陈宏翔", "陈海江", "陈爱军", "陈贤祯", "陶娟", "霍仕文", "高芸璐", "魏爱华", "鲁严", "黄艳春", "龚锦"]}, {"name": "度普利尤单抗", "kol_count": 57, "kols": ["Elizabeth A. Kiracofe", "Sarina Elmariah", "亓玉清", "亓玉青", "侯李悦", "刘丽娟", "刘倩", "刘玉梅", "刘红霞", "包军", "叶静静", "吴佳纹", "吴文育", "周城", "夏建新", "孙青", "常建民", "张丽", "张小超", "张建中", "张春雷", "张浩", "张福仁", "张锡宝", "曾凡钦", "朱慧兰", "李巍", "李智铭", "李欣", "林志淼", "林英翔", "沈燕娜", "涂平", "王晓阳", "王渟", "王莹哲", "田歆", "盛宇俊", "肖塔", "蔡涛", "赵作涛", "赵琰", "郑跃", "郭庆", "陈宏翔", "陈官芝", "陈晓栋", "陈爱军", "陈瑾", "陶娟", "韩昌旭", "顾超颖", "顾颖颖", "马琳", "马莉", "魏庆宇", "魏爱华"]}, {"name": "氘可来昔替尼", "kol_count": 37, "kols": ["丁延涛", "丁杨峰", "于学红", "任诗峰", "冉玉平", "刘岩", "刘琴", "吕永梅", "夏建新", "姜红浩", "孙明强", "尹志强", "崔绍山", "张卫华", "张蕴颖", "彭霖", "李林", "李欣", "李霞", "杨井", "王文慧", "王苗苗", "王轶伦", "申晨", "石春蕊", "罗娜", "耿松梅", "胡彬", "胡祥宇", "范崇帅", "贾华魁", "贾立军", "邓娅", "金怡", "陈龙", "马学良", "高芸璐"]}, {"name": "司普奇拜单抗", "kol_count": 28, "kols": ["亓玉清", "亓玉青", "侯李悦", "刘丽娟", "刘倩", "叶静静", "吴佳纹", "夏建新", "常建民", "张小超", "张建中", "张福仁", "朱慧兰", "李智铭", "李欣", "沈燕娜", "王渟", "王莹哲", "田歆", "盛宇俊", "肖塔", "蔡涛", "郑跃", "陈爱军", "韩昌旭", "顾超颖", "顾颖颖", "马莉"]}, {"name": "乌帕替尼", "kol_count": 21, "kols": ["刘玉梅", "刘红", "吴文育", "吴辛刚", "周城", "唐苏为", "夏建新", "张丽", "张学军", "张春雷", "张江安", "张浩", "张锡宝", "李巍", "林尽染", "林茂", "涂平", "谢君", "陈瑾", "陈静", "项蕾红"]}, {"name": "替瑞奇珠单抗", "kol_count": 18, "kols": ["丁杨峰", "刘宏业", "匡叶红", "张学军", "朱可建", "李亚萍", "杨斌", "杨森", "樊平申", "满孝勇", "王建波", "王晓华", "祝立丽", "袁景奕", "郑敏", "陈柳青", "马学良", "鲁建云"]}, {"name": "阿布昔替尼", "kol_count": 16, "kols": ["丁晓琴", "刘晓", "周焰", "孙振燕", "宋海祯", "尹斌", "张丽", "张学军", "张建中", "李静", "袁海舰", "闵玮", "陈国", "陈文琦", "韩永春", "马一平"]}, {"name": "古塞奇尤单抗", "kol_count": 15, "kols": ["丁杨峰", "刘红", "刘芳", "吴晓雁", "孙建方", "孙良丹", "张学军", "张振颖", "李薇", "涂平", "满孝勇", "王再兴", "袁立燕", "邓丹琪", "陈柳青"]}, {"name": "司库奇尤单抗", "kol_count": 11, "kols": ["丁晓琴", "刘晓明", "周焰", "张学军", "张建中", "张福仁", "徐金华", "樊平申", "王宝玺", "耿松梅", "赵作涛"]}, {"name": "比奇珠单抗", "kol_count": 9, "kols": ["何黎", "吴文育", "常建民", "方方", "晋红中", "王秀丽", "闫言", "陈柳青", "鞠强"]}, {"name": "奥马珠单抗", "kol_count": 8, "kols": ["刘晓明", "吴文育", "周城", "张学军", "王宝玺", "耿松梅", "赵作涛", "郝飞"]}, {"name": "利特昔替尼", "kol_count": 6, "kols": ["吴文育", "周城", "张学军", "施为", "林尽染", "林茂"]}, {"name": "拉那利尤单抗", "kol_count": 5, "kols": ["喻楠", "张建中", "张锡宝", "徐金华", "魏爱华"]}, {"name": "艾玛昔替尼", "kol_count": 5, "kols": ["刘湘", "李亚萍", "林茂", "谢君", "郑文军"]}, {"name": "匹康奇拜单抗", "kol_count": 3, "kols": ["史玉玲", "张学军", "杨青"]}, {"name": "多磺酸粘多糖乳膏", "kol_count": 3, "kols": ["刘盛秀", "张涛", "薛珂"]}, {"name": "他克莫司", "kol_count": 2, "kols": ["陈文琦", "马一平"]}, {"name": "克立硼罗", "kol_count": 2, "kols": ["袁海舰", "陈国"]}, {"name": "柯美奇拜单", "kol_count": 2, "kols": ["张建中", "赵琰"]}, {"name": "氟轻松氢醌维A酸乳膏", "kol_count": 2, "kols": ["刘全忠", "朱宪彝"]}, {"name": "芦可替尼", "kol_count": 2, "kols": ["张学军", "盛宇俊"]}, {"name": "阿达木单抗", "kol_count": 2, "kols": ["樊平申", "王晓华"]}, {"name": "佩索利单抗", "kol_count": 1, "kols": ["耿松梅"]}, {"name": "依若奇单抗", "kol_count": 1, "kols": ["徐金华"]}, {"name": "柯美奇拜单抗", "kol_count": 1, "kols": ["魏爱华"]}, {"name": "盐酸吉卡昔替尼", "kol_count": 1, "kols": ["张建中"]}, {"name": "莫格利珠单抗", "kol_count": 1, "kols": ["刘洁"]}, {"name": "赛立奇单抗", "kol_count": 1, "kols": ["徐金华"]}], "total_articles": 85, "total_drugs": 29, "total_kols": 270};
+
+const drugColors = ['d1','d2','d3','d4','d5','d6','d7','d8'];
+function dc(name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xfffffff;
+    return drugColors[h % drugColors.length];
+}
+function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escAttr(s) {
+    return String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+function hl(text, kw) {
+    if (!kw) return esc(text);
+    const safe = kw.replace(/[.*+?^\${}()|[\]\\]/g, String.fromCharCode(92) + '$&');
+    return esc(text).replace(new RegExp('(' + safe + ')', 'gi'), '<span class="search-hl">$1</span>');
+}
+
+/* === Tag click interaction === */
+let selectedTag = null; // {type:'drug'|'kol', name:'...'}
+
+function onTagClick(type, name) {
+    // Toggle: if same tag clicked again, clear
+    if (selectedTag && selectedTag.type === type && selectedTag.name === name) {
+        selectedTag = null;
+        document.getElementById('searchInput').value = '';
+    } else {
+        selectedTag = { type, name };
+        document.getElementById('searchInput').value = name;
+    }
+    renderAll();
+}
+
+function isActiveTag(type, name) {
+    return selectedTag && selectedTag.type === type && selectedTag.name === name
+        ? ' active' : '';
+}
+
+function tagAttrs(type, name) {
+    return `onclick="onTagClick('${escAttr(type)}','${escAttr(name)}')"`;
+}
+
+function renderKPIs() {
+    const totalKOLs = rawData.total_kols;
+    const maxFreq = rawData.kol_ranked.length > 0 ? rawData.kol_ranked[0].drug_count : 0;
+    const kol1 = rawData.kol_ranked.filter(k => k.drug_count === 1).length;
+    const pct = (kol1 / totalKOLs * 100).toFixed(0);
+    document.getElementById('kpiRow').innerHTML = `
+        <div class="kpi-card">
+            <div class="value">${totalKOLs}</div>
+            <div class="label">商业化合作KOL总数</div>
+        </div>
+        <div class="kpi-card alt">
+            <div class="value">${maxFreq}</div>
+            <div class="label">最高合作频次上限</div>
+        </div>
+        <div class="kpi-card alt2">
+            <div class="value">${pct}%</div>
+            <div class="label">KOL仅合作1次占比</div>
+        </div>
+    `;
+}
+
+function renderKOLPanel() {
+    const minFreq = parseInt(document.getElementById('freqFilter').value);
+    const topN = parseInt(document.getElementById('topN').value);
+    const kw = document.getElementById('searchInput').value.trim().toLowerCase();
+
+    let kols = rawData.kol_ranked.filter(k => k.drug_count >= minFreq);
+    if (kw) {
+        kols = kols.filter(k =>
+            k.name.toLowerCase().includes(kw) ||
+            k.drugs.some(d => d.toLowerCase().includes(kw))
+        );
+    }
+
+    document.getElementById('kolSubtitle').textContent =
+        `共${kols.length}位KOL，展示前${Math.min(topN, kols.length)}位及品牌关联`;
+
+    if (kols.length === 0) {
+        document.getElementById('kolSection').innerHTML =
+            '<div style="padding:40px;text-align:center;color:#999;">无符合条件的KOL</div>';
+        return;
+    }
+
+    const maxD = kols[0].drug_count;
+    const top = kols.slice(0, topN);
+    document.getElementById('kolSection').innerHTML = top.map((k, i) => {
+        const rank = i + 1;
+        const isFirst = rank === 1;
+        const barW = Math.max(15, (k.drug_count / maxD) * 100);
+        const tags = k.drugs.map(d => `<span class="tag ${dc(d)}${isActiveTag('drug', d)}" ${tagAttrs('drug', d)}>${hl(d, kw)}</span>`).join('');
+        return `<div class="row">
+            <div class="rank ${isFirst?'gold':''}">${rank}</div>
+            <div class="name${isActiveTag('kol', k.name) ? ' search-hl' : ''}" title="${esc(k.name)}" style="cursor:pointer" onclick="onTagClick('kol','${escAttr(k.name)}')">${hl(k.name, kw)}</div>
+            <div class="bar-wrap">
+                <div class="bar ${isFirst?'gold':''}" style="width:${barW}%;"></div>
+                <div class="count">${k.drug_count}<span class="unit">次</span></div>
+            </div>
+            <div class="tags">${tags}</div>
+        </div>`;
+    }).join('');
+}
+
+function renderDrugPanel() {
+    const topN = parseInt(document.getElementById('topN').value);
+    const kw = document.getElementById('searchInput').value.trim().toLowerCase();
+
+    let drugs = rawData.drug_ranked.slice();
+    if (kw) {
+        drugs = drugs.filter(d =>
+            d.name.toLowerCase().includes(kw) ||
+            d.kols.some(k => k.toLowerCase().includes(kw))
+        );
+    }
+
+    document.getElementById('drugSubtitle').textContent =
+        `共${drugs.length}个药品，展示前${Math.min(topN, drugs.length)}个及关联专家数`;
+
+    if (drugs.length === 0) {
+        document.getElementById('drugSection').innerHTML =
+            '<div style="padding:40px;text-align:center;color:#999;">无符合条件的药品</div>';
+        return;
+    }
+
+    const maxK = drugs[0].kol_count;
+    const top = drugs.slice(0, topN);
+    document.getElementById('drugSection').innerHTML = top.map((d, i) => {
+        const rank = i + 1;
+        const isFirst = rank === 1;
+        const barW = Math.max(15, (d.kol_count / maxK) * 100);
+        const top5 = d.kols.slice(0, 5).map(k => `<span class="tag d1${isActiveTag('kol', k)}" ${tagAttrs('kol', k)}>${hl(k, kw)}</span>`).join('');
+        const more = d.kols.length > 5 ? `<span class="tag more" onclick="onTagClick('drug','${escAttr(d.name)}')">+${d.kols.length - 5}位</span>` : '';
+        return `<div class="row">
+            <div class="rank ${isFirst?'gold':''}">${rank}</div>
+            <div class="name${isActiveTag('drug', d.name) ? ' search-hl' : ''}" title="${esc(d.name)}" style="cursor:pointer" onclick="onTagClick('drug','${escAttr(d.name)}')">${hl(d.name, kw)}</div>
+            <div class="bar-wrap">
+                <div class="bar ${isFirst?'yellow':''}" style="width:${barW}%;"></div>
+                <div class="count">${d.kol_count}<span class="unit">位专家</span></div>
+            </div>
+            <div class="tags">${top5}${more}</div>
+        </div>`;
+    }).join('');
+}
+
+function renderGroupPanel() {
+    const kw = document.getElementById('searchInput').value.trim().toLowerCase();
+
+    let kols = rawData.kol_ranked.filter(k => k.drug_count === 1);
+    if (kw) {
+        kols = kols.filter(k =>
+            k.name.toLowerCase().includes(kw) ||
+            k.drugs.some(d => d.toLowerCase().includes(kw))
+        );
+    }
+
+    document.getElementById('groupSubtitle').textContent =
+        `${kols.length}位KOL仅出现1次，按所合作药品分组展示`;
+
+    if (kols.length === 0) {
+        document.getElementById('groupSection').innerHTML =
+            '<div style="padding:40px;text-align:center;color:#999;">无符合条件的KOL</div>';
+        return;
+    }
+
+    const drugMap = {};
+    kols.forEach(k => {
+        k.drugs.forEach(d => {
+            if (!drugMap[d]) drugMap[d] = [];
+            drugMap[d].push(k.name);
+        });
+    });
+    const entries = Object.entries(drugMap).sort((a, b) => b[1].length - a[1].length);
+
+    document.getElementById('groupSection').innerHTML = entries.map(([drug, list]) => {
+        const names = list.map(n => `<span class="tag d2${isActiveTag('kol', n)}" ${tagAttrs('kol', n)}>${hl(n, kw)}</span>`).join(' ');
+        return `<div class="group-section">
+            <div class="group-header">
+                <span class="group-tag tag ${dc(drug)}${isActiveTag('drug', drug)}" ${tagAttrs('drug', drug)}>${hl(drug, kw)}</span>
+                <span class="group-count">${list.length}位专家</span>
+            </div>
+            <div class="group-names">${names}</div>
+        </div>`;
+    }).join('');
+}
+
+function renderAll() {
+    renderKPIs();
+    renderKOLPanel();
+    renderDrugPanel();
+    renderGroupPanel();
+    renderFilterBar();
+}
+
+function renderFilterBar() {
+    const bar = document.getElementById('filterBar');
+    if (!selectedTag) {
+        bar.style.display = 'none';
+        return;
+    }
+    bar.style.display = 'flex';
+    const typeLabel = selectedTag.type === 'drug' ? '药品' : '专家';
+    bar.innerHTML = `
+        <span style="font-size:13px;color:#666;">已选中筛选：</span>
+        <span class="tag ${dc(selectedTag.name)} active">${esc(selectedTag.name)}</span>
+        <span style="font-size:12px;color:#999;">（${typeLabel}）</span>
+        <button class="clear-btn" onclick="clearFilter()">清除筛选</button>
+    `;
+}
+
+function clearFilter() {
+    selectedTag = null;
+    document.getElementById('searchInput').value = '';
+    renderAll();
+}
+
+document.getElementById('freqFilter').addEventListener('change', renderAll);
+document.getElementById('topN').addEventListener('change', renderAll);
+document.getElementById('searchInput').addEventListener('input', function() {
+    selectedTag = null;
+    renderAll();
+});
+
+renderAll();
+</script>
+
+</body>
+</html>
