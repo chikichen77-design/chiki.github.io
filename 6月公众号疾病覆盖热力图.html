@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>6月公众号疾病覆盖热力图</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+  body { background: #f8fafc; }
+  .fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .card-in { animation: cardIn 0.3s ease forwards; opacity: 0; }
+  @keyframes cardIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+  .disease-card:hover { transform: scale(1.05); z-index: 10; }
+  .disease-card { transition: transform 0.15s ease, background-color 0.2s ease; }
+  .modal-overlay { animation: overlayIn 0.2s ease forwards; }
+  @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal-content { animation: modalIn 0.3s ease forwards; }
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+</style>
+</head>
+<body class="min-h-screen bg-slate-50">
+
+<div id="root"></div>
+
+<script>
+// Disease data
+var diseases = [
+{name:`银屑病`,category:`hot`,platformMentions:74,yimaitong:9,youmai:30,yixuejie:16,dingxiangyuan:19},
+{name:`特应性皮炎`,category:`hot`,platformMentions:64,yimaitong:13,youmai:26,yixuejie:7,dingxiangyuan:18},
+{name:`痤疮`,category:`hot`,platformMentions:44,yimaitong:8,youmai:21,yixuejie:7,dingxiangyuan:8},
+{name:`白癜风`,category:`hot`,platformMentions:35,yimaitong:5,youmai:18,yixuejie:2,dingxiangyuan:10},
+{name:`斑秃`,category:`hot`,platformMentions:26,yimaitong:9,youmai:10,yixuejie:3,dingxiangyuan:4},
+{name:`雄激素性脱发`,category:`hot`,platformMentions:26,yimaitong:10,youmai:10,yixuejie:3,dingxiangyuan:3},
+{name:`荨麻疹`,category:`hot`,platformMentions:21,yimaitong:5,youmai:9,yixuejie:4,dingxiangyuan:3},
+{name:`玫瑰痤疮`,category:`hot`,platformMentions:20,yimaitong:2,youmai:9,yixuejie:5,dingxiangyuan:4},
+{name:`未明确疾病`,category:`hot`,platformMentions:19,yimaitong:5,youmai:6,yixuejie:0,dingxiangyuan:8},
+{name:`红斑狼疮`,category:`hot`,platformMentions:17,yimaitong:5,youmai:5,yixuejie:3,dingxiangyuan:4},
+{name:`带状疱疹`,category:`hot`,platformMentions:15,yimaitong:1,youmai:5,yixuejie:4,dingxiangyuan:5},
+{name:`湿疹`,category:`hot`,platformMentions:14,yimaitong:5,youmai:1,yixuejie:5,dingxiangyuan:3},
+{name:`黑色素瘤`,category:`hot`,platformMentions:14,yimaitong:1,youmai:3,yixuejie:4,dingxiangyuan:6},
+{name:`硬皮病`,category:`hot`,platformMentions:13,yimaitong:1,youmai:5,yixuejie:3,dingxiangyuan:4},
+{name:`休止期脱发`,category:`hot`,platformMentions:12,yimaitong:4,youmai:6,yixuejie:1,dingxiangyuan:1},
+{name:`化脓性汗腺炎`,category:`hot`,platformMentions:12,yimaitong:0,youmai:9,yixuejie:2,dingxiangyuan:1},
+{name:`接触性皮炎`,category:`hot`,platformMentions:12,yimaitong:2,youmai:3,yixuejie:4,dingxiangyuan:3},
+{name:`毛囊炎`,category:`hot`,platformMentions:12,yimaitong:4,youmai:0,yixuejie:3,dingxiangyuan:5},
+{name:`皮肌炎`,category:`hot`,platformMentions:12,yimaitong:4,youmai:1,yixuejie:2,dingxiangyuan:5},
+{name:`大疱性类天疱疮`,category:`hot`,platformMentions:11,yimaitong:0,youmai:4,yixuejie:2,dingxiangyuan:5},
+{name:`天疱疮`,category:`hot`,platformMentions:11,yimaitong:3,youmai:3,yixuejie:2,dingxiangyuan:3},
+{name:`扁平苔藓`,category:`hot`,platformMentions:11,yimaitong:1,youmai:1,yixuejie:5,dingxiangyuan:4},
+{name:`炎症后色素沉着`,category:`hot`,platformMentions:11,yimaitong:5,youmai:2,yixuejie:3,dingxiangyuan:1},
+{name:`坏疽性脓皮病`,category:`hot`,platformMentions:10,yimaitong:1,youmai:3,yixuejie:3,dingxiangyuan:3},
+{name:`鳞状细胞癌`,category:`hot`,platformMentions:10,yimaitong:0,youmai:3,yixuejie:3,dingxiangyuan:4},
+{name:`黄褐斑`,category:`hot`,platformMentions:10,yimaitong:3,youmai:4,yixuejie:3,dingxiangyuan:0},
+{name:`梅毒`,category:`hot`,platformMentions:9,yimaitong:1,youmai:0,yixuejie:4,dingxiangyuan:4},
+{name:`系统性红斑狼疮`,category:`hot`,platformMentions:9,yimaitong:4,youmai:2,yixuejie:1,dingxiangyuan:2},
+{name:`脂溢性皮炎`,category:`hot`,platformMentions:9,yimaitong:1,youmai:6,yixuejie:0,dingxiangyuan:2},
+{name:`单纯疱疹`,category:`hot`,platformMentions:8,yimaitong:1,youmai:1,yixuejie:5,dingxiangyuan:1},
+{name:`结节性痒疹`,category:`hot`,platformMentions:8,yimaitong:1,youmai:3,yixuejie:1,dingxiangyuan:3},
+{name:`基底细胞癌`,category:`hot`,platformMentions:7,yimaitong:2,youmai:2,yixuejie:2,dingxiangyuan:1},
+{name:`太田痣`,category:`hot`,platformMentions:6,yimaitong:4,youmai:1,yixuejie:1,dingxiangyuan:0},
+{name:`头癣`,category:`hot`,platformMentions:6,yimaitong:2,youmai:0,yixuejie:2,dingxiangyuan:2},
+{name:`尖锐湿疣`,category:`hot`,platformMentions:5,yimaitong:1,youmai:1,yixuejie:2,dingxiangyuan:1},
+{name:`甲沟炎`,category:`hot`,platformMentions:5,yimaitong:0,youmai:0,yixuejie:3,dingxiangyuan:2},
+{name:`皮肤肿瘤`,category:`hot`,platformMentions:5,yimaitong:0,youmai:5,yixuejie:0,dingxiangyuan:0},
+{name:`类风湿关节炎`,category:`hot`,platformMentions:5,yimaitong:3,youmai:0,yixuejie:1,dingxiangyuan:1},
+{name:`色素痣`,category:`hot`,platformMentions:5,yimaitong:0,youmai:2,yixuejie:2,dingxiangyuan:1},
+{name:`丹毒`,category:`common`,platformMentions:4,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:3},
+{name:`传染性软疣`,category:`common`,platformMentions:4,yimaitong:0,youmai:0,yixuejie:2,dingxiangyuan:2},
+{name:`体癣`,category:`common`,platformMentions:4,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:3},
+{name:`化脓性肉芽肿`,category:`common`,platformMentions:4,yimaitong:0,youmai:0,yixuejie:2,dingxiangyuan:2},
+{name:`多形性日光疹`,category:`common`,platformMentions:4,yimaitong:1,youmai:0,yixuejie:2,dingxiangyuan:1},
+{name:`甲癣`,category:`common`,platformMentions:4,yimaitong:0,youmai:1,yixuejie:1,dingxiangyuan:2},
+{name:`疥疮`,category:`common`,platformMentions:4,yimaitong:0,youmai:1,yixuejie:2,dingxiangyuan:1},
+{name:`痤疮瘢痕`,category:`common`,platformMentions:4,yimaitong:2,youmai:2,yixuejie:0,dingxiangyuan:0},
+{name:`瘢痕疙瘩`,category:`common`,platformMentions:4,yimaitong:1,youmai:2,yixuejie:0,dingxiangyuan:1},
+{name:`脂溢性角化病`,category:`common`,platformMentions:4,yimaitong:1,youmai:0,yixuejie:2,dingxiangyuan:1},
+{name:`脓疱疮`,category:`common`,platformMentions:4,yimaitong:1,youmai:0,yixuejie:1,dingxiangyuan:2},
+{name:`脱发`,category:`common`,platformMentions:4,yimaitong:0,youmai:2,yixuejie:2,dingxiangyuan:0},
+{name:`花斑癣`,category:`common`,platformMentions:4,yimaitong:0,youmai:1,yixuejie:2,dingxiangyuan:1},
+{name:`蕈样肉芽肿`,category:`common`,platformMentions:4,yimaitong:1,youmai:3,yixuejie:0,dingxiangyuan:0},
+{name:`蜂窝织炎`,category:`common`,platformMentions:4,yimaitong:2,youmai:0,yixuejie:0,dingxiangyuan:2},
+{name:`银屑病关节炎`,category:`common`,platformMentions:4,yimaitong:4,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`鱼鳞病`,category:`common`,platformMentions:4,yimaitong:0,youmai:1,yixuejie:1,dingxiangyuan:2},
+{name:`麻风`,category:`common`,platformMentions:4,yimaitong:1,youmai:1,yixuejie:1,dingxiangyuan:1},
+{name:`Sweet综合征`,category:`common`,platformMentions:3,yimaitong:1,youmai:0,yixuejie:2,dingxiangyuan:0},
+{name:`卡波西肉瘤`,category:`common`,platformMentions:3,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:2},
+{name:`增生性瘢痕`,category:`common`,platformMentions:3,yimaitong:1,youmai:1,yixuejie:0,dingxiangyuan:1},
+{name:`寻常疣`,category:`common`,platformMentions:3,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:2},
+{name:`带状疱疹后神经痛`,category:`common`,platformMentions:3,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:2},
+{name:`扁平苔藓样类天疱疮`,category:`common`,platformMentions:3,yimaitong:1,youmai:2,yixuejie:0,dingxiangyuan:0},
+{name:`毛发扁平苔藓`,category:`common`,platformMentions:3,yimaitong:1,youmai:1,yixuejie:1,dingxiangyuan:0},
+{name:`炎症性肠病`,category:`common`,platformMentions:3,yimaitong:1,youmai:1,yixuejie:1,dingxiangyuan:0},
+{name:`猴痘`,category:`common`,platformMentions:3,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:2},
+{name:`环状肉芽肿`,category:`common`,platformMentions:3,yimaitong:0,youmai:0,yixuejie:2,dingxiangyuan:1},
+{name:`疖`,category:`common`,platformMentions:3,yimaitong:0,youmai:0,yixuejie:2,dingxiangyuan:1},
+{name:`疱疹样皮炎`,category:`common`,platformMentions:3,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:2},
+{name:`白塞病`,category:`common`,platformMentions:3,yimaitong:0,youmai:0,yixuejie:3,dingxiangyuan:0},
+{name:`神经梅毒`,category:`common`,platformMentions:3,yimaitong:1,youmai:2,yixuejie:0,dingxiangyuan:0},
+{name:`类天疱疮`,category:`common`,platformMentions:3,yimaitong:1,youmai:0,yixuejie:1,dingxiangyuan:1},
+{name:`红皮病`,category:`common`,platformMentions:3,yimaitong:0,youmai:1,yixuejie:1,dingxiangyuan:1},
+{name:`胼胝`,category:`common`,platformMentions:3,yimaitong:1,youmai:0,yixuejie:1,dingxiangyuan:1},
+{name:`腋臭`,category:`common`,platformMentions:3,yimaitong:0,youmai:3,yixuejie:0,dingxiangyuan:0},
+{name:`药疹`,category:`common`,platformMentions:3,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:2},
+{name:`虫咬皮炎`,category:`common`,platformMentions:3,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:2},
+{name:`血管瘤`,category:`common`,platformMentions:3,yimaitong:1,youmai:2,yixuejie:0,dingxiangyuan:0},
+{name:`跖疣`,category:`common`,platformMentions:3,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:2},
+{name:`重症药疹`,category:`common`,platformMentions:3,yimaitong:0,youmai:2,yixuejie:1,dingxiangyuan:0},
+{name:`鲜红斑痣`,category:`common`,platformMentions:3,yimaitong:1,youmai:1,yixuejie:0,dingxiangyuan:1},
+{name:`ANCA相关血管炎`,category:`common`,platformMentions:2,yimaitong:1,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`SAPHO综合征`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:1},
+{name:`丝虫病`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:2,dingxiangyuan:0},
+{name:`乳房外Paget病`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:2},
+{name:`刺激性接触性皮炎`,category:`common`,platformMentions:2,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`前额纤维化性秃发`,category:`common`,platformMentions:2,yimaitong:1,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`副肿瘤性天疱疮`,category:`common`,platformMentions:2,yimaitong:0,youmai:1,yixuejie:1,dingxiangyuan:0},
+{name:`坏死性筋膜炎`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:1},
+{name:`多发性脂囊瘤`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:2,dingxiangyuan:0},
+{name:`多发性骨髓瘤`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:1},
+{name:`多汗症`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:2},
+{name:`尿布皮炎`,category:`common`,platformMentions:2,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:1},
+{name:`急性泛发性发疹性脓疱病`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:1},
+{name:`恶性黑色素瘤`,category:`common`,platformMentions:2,yimaitong:1,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`手癣`,category:`common`,platformMentions:2,yimaitong:0,youmai:1,yixuejie:1,dingxiangyuan:0},
+{name:`手部湿疹`,category:`common`,platformMentions:2,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:1},
+{name:`掌跖脓疱病`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:2},
+{name:`日光性皮炎`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:1},
+{name:`日光性角化病`,category:`common`,platformMentions:2,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:1},
+{name:`毛发疾病`,category:`common`,platformMentions:2,yimaitong:0,youmai:2,yixuejie:0,dingxiangyuan:0},
+{name:`水痘`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:1},
+{name:`汗孔角化症`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:2,dingxiangyuan:0},
+{name:`汗管瘤`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:2,dingxiangyuan:0},
+{name:`淋巴瘤`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:2,dingxiangyuan:0},
+{name:`深部真菌感染`,category:`common`,platformMentions:2,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:1},
+{name:`激素依赖性皮炎`,category:`common`,platformMentions:2,yimaitong:0,youmai:2,yixuejie:0,dingxiangyuan:0},
+{name:`点状掌跖角化病`,category:`common`,platformMentions:2,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`甲周疣`,category:`common`,platformMentions:2,yimaitong:0,youmai:2,yixuejie:0,dingxiangyuan:0},
+{name:`甲黑素瘤`,category:`common`,platformMentions:2,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:1},
+{name:`痈`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:2},
+{name:`痛风`,category:`common`,platformMentions:2,yimaitong:2,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`瘢痕`,category:`common`,platformMentions:2,yimaitong:0,youmai:2,yixuejie:0,dingxiangyuan:0},
+{name:`瘢痕性脱发`,category:`common`,platformMentions:2,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`登革热`,category:`common`,platformMentions:2,yimaitong:1,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`白色糠疹`,category:`common`,platformMentions:2,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:1},
+{name:`皮下脂膜炎样T细胞淋巴瘤`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:1},
+{name:`皮炎`,category:`common`,platformMentions:2,yimaitong:2,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`皮肤利什曼病`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:2,dingxiangyuan:0},
+{name:`皮肤淀粉样变`,category:`common`,platformMentions:2,yimaitong:0,youmai:1,yixuejie:1,dingxiangyuan:0},
+{name:`皮肤血管炎`,category:`common`,platformMentions:2,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`硬化性苔藓`,category:`common`,platformMentions:2,yimaitong:0,youmai:1,yixuejie:1,dingxiangyuan:0},
+{name:`硬化性黏液水肿`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:2},
+{name:`神经性皮炎`,category:`common`,platformMentions:2,yimaitong:2,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`离心性环状红斑`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:2},
+{name:`移植物抗宿主病`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:1},
+{name:`糖尿病足`,category:`common`,platformMentions:2,yimaitong:0,youmai:2,yixuejie:0,dingxiangyuan:0},
+{name:`红癣`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:2},
+{name:`结节性红斑`,category:`common`,platformMentions:2,yimaitong:0,youmai:1,yixuejie:1,dingxiangyuan:0},
+{name:`结节病`,category:`common`,platformMentions:2,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`老年皮肤瘙痒症`,category:`common`,platformMentions:2,yimaitong:0,youmai:2,yixuejie:0,dingxiangyuan:0},
+{name:`自身免疫性大疱病`,category:`common`,platformMentions:2,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`药物超敏反应综合征`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:2,dingxiangyuan:0},
+{name:`融合性网状乳头瘤病`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:2,dingxiangyuan:0},
+{name:`血管炎`,category:`common`,platformMentions:2,yimaitong:1,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`血管球瘤`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:1},
+{name:`表皮样囊肿`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:2,dingxiangyuan:0},
+{name:`遗传性血管性水肿`,category:`common`,platformMentions:2,yimaitong:0,youmai:2,yixuejie:0,dingxiangyuan:0},
+{name:`雀斑`,category:`common`,platformMentions:2,yimaitong:1,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`非结核分枝杆菌病`,category:`common`,platformMentions:2,yimaitong:0,youmai:2,yixuejie:0,dingxiangyuan:0},
+{name:`鲍温病`,category:`common`,platformMentions:2,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:1},
+{name:`鸡眼`,category:`common`,platformMentions:2,yimaitong:1,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`麻风病`,category:`common`,platformMentions:2,yimaitong:0,youmai:2,yixuejie:0,dingxiangyuan:0},
+{name:`黑棘皮病`,category:`common`,platformMentions:2,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:2},
+{name:`Addison病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`A组链球菌感染`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`Bean综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`Birt-Hogg-Dubé综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`Blau综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`Buschke硬肿病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`Castleman病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`Civate皮肤异色病`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`Gorlin综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`Graham-Little综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`Hyper-IgE综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`IgA天疱疮`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`IgA血管炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`IgG4相关性疾病`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`Klippel-Trenaunay综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`Maffucci综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`Majocchi肉芽肿`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`POEMS综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`PRIDE综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`Papillon-Lefèvre综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`Schnitzler综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`Stevens-Johnson综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`Waldenström高丙种球蛋白血症性紫癜`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`Weber-Christian病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`上皮样组织细胞瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`上皮样肉瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`下肢淋巴管炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`丘疹性荨麻疹`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`丘疹紫癜性手套和短袜样综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`丛林斑疹伤寒`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`中央离心性瘢痕性秃发`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`中性粒细胞性小汗腺炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`中毒性表皮坏死松解症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`乏脂性湿疹`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`乳外Paget病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`乳头状汗腺瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`乳腺癌`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`亚急性皮肤红斑狼疮`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`人为性皮炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`人乳头瘤病毒感染`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`伊藤色素减少症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`传染性红斑`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`低补体血症性荨麻疹性血管炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`儿童皮肤病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`先天性少毛症`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`光化性痒疹`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`光泽苔藓`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`免疫复合物性血管炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`兔热病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`全身发疹性组织细胞增多症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`冷球蛋白血症性血管炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`冻疮样狼疮`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`利什曼病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`剥脱性角质松解症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`卡波西水痘样疹`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`原发性皮肤淀粉样变`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`原发性皮肤淀粉样变性`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`原发性皮肤淀粉样变病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`发疹性毳毛囊肿`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`后天性皮肤黑变病`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`咖啡斑`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`嗜酸性筋膜炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`嗜酸性脓疱性毛囊炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`嗜酸性蜂窝织炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`囊尾蚴病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`固定性药疹`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`坏疽性深脓疱病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`埃博拉`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`基孔肯雅热`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`基底细胞痣综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`复发性多软骨炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`外阴-阴道-牙龈综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`多发性内分泌腺瘤病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`多发性角化棘皮瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`多形性红斑`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`多形红斑`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`大疱性疾病`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`大疱性表皮松解性角化过度症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`大疱性表皮松解症`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`婴儿嗜酸性脓疱性毛囊炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`婴儿肢端脓疱病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`婴幼儿尿布皮炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`婴幼儿血管瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`孢子丝菌病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`家族性慢性良性天疱疮`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`寄生虫性皮炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`寨卡病毒感染`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`尾蚴皮炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`布鲁里溃疡`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`干燥综合征`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`幼年黄色肉芽肿`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`异位唾液腺组织`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`强直性脊柱炎`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`念珠菌性间擦疹`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`急性皮肤红斑狼疮`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`性传播疾病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`恶丝虫病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`恶性外周神经鞘瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`恶性外耳道炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`恶性皮肤肿瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`恶性蕈样肉芽肿样肿瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`感染性湿疹样皮炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`感染性皮肤病`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`慢性光化性皮炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`慢性皮肤红斑狼疮`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`慢性神经痛`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`慢性红斑性水肿`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`慢性自发性荨麻疹`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`成人STILL病`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`成人性硬肿症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`扁平疣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`抑郁症`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`抗磷脂抗体综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`抗磷脂综合征`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`拉姆齐-亨特综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`拔毛癖`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`指（趾）黏液样囊肿`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`掌纹点状角化病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`掌跖角化病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`斑痣`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`斑驳病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`新生儿中毒性红斑`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`新生儿暂时性脓疱性黑变病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`无色素痣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`日光性雀斑样痣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`日光性黑子`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`朗格汉斯细胞组织细胞增生症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`杆菌性血管瘤病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`梭形细胞黑色素瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`棒状杆菌三联征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`棘球蚴病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`棘阿米巴病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`模式分布纤维化性脱发`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`模式性分布纤维化性脱发`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`樱桃状血管瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`毛发囊肿`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`毛囊蠕形螨病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`毛囊角化病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`毛囊角化综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`毛母质瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`毛结节菌病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`水母皮炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`水源性肢端角化症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`汗孔角化性扁平苔藓`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`汗孔角化病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`汗孔角化瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`浆细胞性外阴炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`浆细胞性龟头炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`海分枝杆菌感染`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`淋巴管瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`淋巴细胞浸润症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`滤泡性甲状腺癌`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`潜蚤病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`火激红斑`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`炎性肌病`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`炎症性皮肤病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`炎症性类天疱疮`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`炎症性线性疣状表皮痣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`炭疽`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`烧伤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`热带溃疡`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`热带脓皮病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`焰色痣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`特发性IgG/IgM血管炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`特发性冻疮`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`狼疮性脂膜炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`狼疮性血管炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`猫抓病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`球孢子菌病`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`甲下外生骨疣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`甲状腺乳头状癌`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`甲状腺性肢端病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`甲病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`甲真菌病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`甲鲍温病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`疟疾`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`疣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`疣状汗孔角化症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`疣状痣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`疣状癌`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`疣状表皮发育不良`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`疣状表皮痣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`疣状黄瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`疱疹性瘭疽`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`瘢痕性模式性脱发`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`瘢痕性秃发`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`白化病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`白塞综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`皮内痣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`皮炎湿疹`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`皮肤Rosai-Dorfman病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`皮肤T细胞淋巴瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`皮肤假性淋巴瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`皮肤型Rosai-Dorfman病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`皮肤型结节性多动脉炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`皮肤垢着病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`皮肤子宫内膜异位症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`皮肤小血管炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`皮肤幼虫移行症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`皮肤淋巴瘤`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`皮肤炭疽`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`皮肤猪囊虫病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`皮肤癌`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`皮肤癣菌病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`皮肤神经纤维瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`皮肤离子通道病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`皮肤红斑狼疮`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`皮肤纤维瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`皮肤良性淋巴样增生`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`皮脂腺瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`盘状红斑狼疮`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`砷角化病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`秃发性毛囊炎`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`种痘样水疱病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`穿掘性蜂窝织炎`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`窝状角质松解症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`立克次体病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`类风湿性血管炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`粉刺样痣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`粟丘疹`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`糖尿病性大疱`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`糖尿病性皮病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`糖尿病性皮肤病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`糖尿病性类脂质渐进性坏死`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`糖尿病溃疡`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`糖尿病足溃疡`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`糜烂性脓疱性皮病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`系统性硬化症`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`系统性轻链型淀粉样变`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`线状IgA大疱性皮病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`线状苔藓`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`结节性硬化症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`缺铁性贫血`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`网状红斑性黏蛋白病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`罕见皮肤病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`罗阿丝虫病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`羊痘`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`耳轮结节性软骨皮炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`肉瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`肋间神经痛`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`肛周疣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`肠道相关性皮炎-关节炎综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`肢端纤维软骨黏液样肿瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`肾小球样血管瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`肿胀性狼疮`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`胫前黏液性水肿`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`脂肪瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`脂质渐进性坏死`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`脓痱`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`脓癣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`腋毛癣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`腱鞘巨细胞瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`自身免疫性疱病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`臭汗症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`色素减退性皮肤病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`色素性扁平苔藓`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`色素性痒疹`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`色素性紫癜性皮病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`色素性脂溢性角化病`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`苔藓样淀粉样变`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`苔藓样皮炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`荨麻疹性血管炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`药物超敏反应`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`获得性外阴淋巴管瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`获得性大疱性表皮松解症`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`落基山斑疹热`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`蓝痣`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`虱病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`蚊咬超敏`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`蝇蛆病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`血管性水肿`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`血管肉瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`血管脂肪瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`表皮痣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`角层下脓疱病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`贝克痣`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`贫血痣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`足癣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`软下疳`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`软垂疣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`过敏性接触性皮炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`过敏性皮炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`过敏性皮肤病`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`过敏性鼻炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`迟发性皮肤卟啉症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`透明细胞棘皮瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`道林-德戈斯病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`遗传性出血性毛细血管扩张症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`遗传性对称性色素异常症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`遗传性皮肤病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`里尔黑变病`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`金德勒综合征`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`钙化防御`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`银屑病-特应性皮炎重叠表型`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`镰状细胞病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`阴茎珍珠样丘疹病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`阿弗他溃疡`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`隆突性皮肤纤维肉瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`隆突性纤维肉瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`雄激素性秃发`,category:`cold`,platformMentions:1,yimaitong:0,youmai:1,yixuejie:0,dingxiangyuan:0},
+{name:`雅司病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`青斑样血管病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`静脉湖`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`非洲蜱咬热`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`非洲锥虫病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`非结核分枝杆菌感染`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`非黑色素瘤皮肤癌`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`颚口线虫病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`额部纤维化性脱发`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`颧部褐青色痣`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`风湿性心脏病`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`风湿热`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`风湿病继发噬血细胞综合征`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`马乔林溃疡`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`骨关节炎`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`髓样甲状腺癌`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`髓母细胞瘤`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`高尿酸血症`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0},
+{name:`高红蜡性皮炎`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`鲍恩病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`麻风结节性红斑`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:0,dingxiangyuan:1},
+{name:`黏液囊肿`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`黑棘皮症`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`黑热病`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`黑癣`,category:`cold`,platformMentions:1,yimaitong:0,youmai:0,yixuejie:1,dingxiangyuan:0},
+{name:`黑色丘疹性皮病`,category:`cold`,platformMentions:1,yimaitong:1,youmai:0,yixuejie:0,dingxiangyuan:0}
+];
+
+// Stats data
+var accountStats = [
+{key:`all`,label:`全平台`,totalCovered:470,hotCovered:39,commonCovered:105,coldCovered:326,uncovered:0},
+{key:`yimaitong`,label:`医脉通皮肤科`,totalCovered:116,hotCovered:33,commonCovered:38,coldCovered:45,uncovered:354},
+{key:`youmai`,label:`优麦会讯`,totalCovered:110,hotCovered:34,commonCovered:45,coldCovered:31,uncovered:360},
+{key:`yixuejie`,label:`医学界皮肤频道`,totalCovered:252,hotCovered:36,commonCovered:53,coldCovered:163,uncovered:218},
+{key:`dingxiangyuan`,label:`丁香园皮肤时间`,totalCovered:182,hotCovered:36,commonCovered:59,coldCovered:87,uncovered:288}
+];
+
+// Category config
+var categoryConfig = {
+  hot: { label: '热门疾病', desc: '全平台总计≥5次提及', color: 'bg-red-500' },
+  common: { label: '常见疾病', desc: '全平台总计2-4次提及', color: 'bg-amber-500' },
+  cold: { label: '冷门疾病', desc: '全平台总计1次提及', color: 'bg-blue-400' }
+};
+
+// Coverage config
+var coverageConfig = {
+  strong: {
+    bg: 'bg-red-100 hover:bg-red-200',
+    border: 'border-red-300',
+    text: 'text-red-700',
+    label: '强覆盖',
+    desc: '单个账号≥2篇'
+  },
+  medium: {
+    bg: 'bg-orange-100 hover:bg-orange-200',
+    border: 'border-orange-300',
+    text: 'text-orange-700',
+    label: '中覆盖',
+    desc: '单个账号1篇'
+  },
+  none: {
+    bg: 'bg-gray-100 hover:bg-gray-200',
+    border: 'border-gray-200',
+    text: 'text-gray-400',
+    label: '未覆盖',
+    desc: '单个账号0篇'
+  }
+};
+
+// Coverage filter options
+var coverageFilters = [
+  { key: 'all', label: '全部', color: '' },
+  { key: 'strong', label: '强覆盖（单个账号≥2篇）', color: 'bg-red-600' },
+  { key: 'medium', label: '中覆盖（单个账号1篇）', color: 'bg-orange-500' },
+  { key: 'none', label: '未覆盖（单个账号0篇）', color: 'bg-slate-600' }
+];
+
+// State
+var selectedAccount = 'all';
+var coverageFilter = 'all';
+var selectedDisease = null;
+
+// SVG icons
+var icons = {
+  total: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z" opacity="0.2"/><path d="M9 3v18M3 9h18"/><circle cx="12" cy="12" r="3"/></svg>',
+  hot: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/></svg>',
+  common: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
+  cold: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>',
+  uncovered: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>'
+};
+
+var statConfig = [
+  { key: 'totalCovered', label: '总覆盖疾病数', sub: '当前账号提及过的疾病', icon: 'total', color: 'text-blue-600', bgColor: 'bg-blue-50' },
+  { key: 'hotCovered', label: '热门疾病', sub: '全平台≥5次提及', icon: 'hot', color: 'text-red-600', bgColor: 'bg-red-50' },
+  { key: 'commonCovered', label: '常见疾病', sub: '全平台2-4次提及', icon: 'common', color: 'text-amber-600', bgColor: 'bg-amber-50' },
+  { key: 'coldCovered', label: '冷门疾病', sub: '全平台1次提及', icon: 'cold', color: 'text-cyan-600', bgColor: 'bg-cyan-50' },
+  { key: 'uncovered', label: '未覆盖疾病', sub: '当前账号0篇', icon: 'uncovered', color: 'text-gray-600', bgColor: 'bg-gray-50' }
+];
+
+function getCoverageLevel(count) {
+  if (count >= 2) return 'strong';
+  if (count === 1) return 'medium';
+  return 'none';
+}
+
+function getCoverageInfo(count) {
+  if (count >= 2) return { label: '强覆盖', color: 'text-red-600' };
+  if (count === 1) return { label: '中覆盖', color: 'text-orange-600' };
+  return { label: '未覆盖', color: 'text-gray-400' };
+}
+
+function getCount(disease, accountKey) {
+  if (accountKey === 'all') return disease.platformMentions;
+  return disease[accountKey] || 0;
+}
+
+function render() {
+  var root = document.getElementById('root');
+  
+  // Get current stats
+  var currentStats = accountStats.find(function(s) { return s.key === selectedAccount; }) || accountStats[0];
+  
+  // Filter diseases by coverage
+  var filteredDiseases = diseases.filter(function(d) {
+    if (coverageFilter === 'all') return true;
+    var count = getCount(d, selectedAccount);
+    return getCoverageLevel(count) === coverageFilter;
+  });
+  
+  // Group by category
+  var grouped = { hot: [], common: [], cold: [] };
+  filteredDiseases.forEach(function(d) {
+    if (grouped[d.category]) grouped[d.category].push(d);
+  });
+
+  // Sort within each category: strong first (by count desc), then medium (by count desc), then none (alphabetical)
+  ['hot', 'common', 'cold'].forEach(function(cat) {
+    grouped[cat].sort(function(a, b) {
+      var ca = getCount(a, selectedAccount);
+      var cb = getCount(b, selectedAccount);
+      var la = getCoverageLevel(ca);
+      var lb = getCoverageLevel(cb);
+      // Order: strong > medium > none
+      var order = { strong: 0, medium: 1, none: 2 };
+      if (order[la] !== order[lb]) return order[la] - order[lb];
+      // Within same coverage level, sort by count desc
+      if (ca !== cb) return cb - ca;
+      // Then by name (pinyin / Chinese char order)
+      return a.name.localeCompare(b.name, 'zh-CN');
+    });
+  });
+  
+  var html = '';
+  
+  // Main container
+  html += '<section class="w-full py-6 md:py-8">';
+  html += '<div class="max-w-[1600px] mx-auto px-4 md:px-6">';
+  html += '<div class="flex flex-col gap-4">';
+  
+  // Header
+  html += '<div>';
+  html += '<h1 class="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">6月公众号非商业化疾病覆盖热力图</h1>';
+  var currentAccountLabel = accountStats.find(function(s) { return s.key === selectedAccount; }).label;
+  html += '<p class="text-sm text-gray-500 mt-1">当前视角：' + currentAccountLabel + '</p>';
+  html += '<div class="mt-2 p-2.5 bg-blue-50 border border-blue-100 rounded-lg text-xs text-gray-600 leading-relaxed">';
+  html += '<span class="font-semibold text-gray-700">统计口径：</span>';
+  html += '<span class="text-red-600 font-medium">疾病热度</span>按<span class="font-medium">全平台总提及次数</span>划分（≥5次=热门，2-4次=常见，1次=冷门）；';
+  html += '<span class="text-orange-600 font-medium">覆盖强度</span>按<span class="font-medium">当前账号发文数</span>划分（≥2篇=强覆盖，1篇=中覆盖，0篇=未覆盖）';
+  html += '</div>';
+  html += '</div>';
+  
+  // Account selector
+  html += '<div class="flex flex-wrap gap-1.5 p-1 bg-gray-100 rounded-lg border border-gray-200">';
+  accountStats.forEach(function(s) {
+    var isActive = selectedAccount === s.key;
+    html += '<button type="button" onclick="selectAccount(\'' + s.key + '\')" class="px-3.5 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ' + (isActive ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200') + '">' + s.label + '</button>';
+  });
+  html += '</div>';
+  
+  // Stats cards
+  html += '<section class="w-full py-4">';
+  html += '<div class="max-w-[1600px] mx-auto px-4 md:px-6">';
+  html += '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">';
+  statConfig.forEach(function(stat) {
+    html += '<div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">';
+    html += '<div class="flex items-center gap-2.5 mb-2">';
+    html += '<div class="w-8 h-8 rounded-lg ' + stat.bgColor + ' flex items-center justify-center">' + icons[stat.icon] + '</div>';
+    html += '<span class="text-xs text-gray-500 font-medium">' + stat.label + '</span>';
+    html += '</div>';
+    html += '<div class="text-2xl md:text-3xl font-bold tabular-nums tracking-tight ' + stat.color + '">' + currentStats[stat.key] + '</div>';
+    if (stat.sub) {
+      html += '<div class="text-[11px] text-gray-400 mt-0.5">' + stat.sub + '</div>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '</div>';
+  html += '</section>';
+  
+  // Coverage filter
+  html += '<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">';
+  html += '<div class="flex items-center gap-2.5">';
+  html += '<span class="text-sm font-medium text-gray-700">覆盖强度<span class="text-xs font-normal text-gray-400 ml-1">（按当前账号发文数）</span></span>';
+  html += '<div class="flex flex-wrap gap-1.5">';
+  coverageFilters.forEach(function(f) {
+    var isActive = coverageFilter === f.key;
+    html += '<button type="button" onclick="selectCoverage(\'' + f.key + '\')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ' + (isActive ? 'bg-gray-200 text-gray-900 ring-1 ring-gray-300' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100') + '">';
+    if (f.color) {
+      html += '<span class="w-2 h-2 rounded-sm ' + f.color + '"></span>';
+    }
+    html += f.label;
+    html += '</button>';
+  });
+  html += '</div>';
+  html += '</div>';
+  html += '</div>';
+  
+  // Disease sections
+  html += '<div class="space-y-6">';
+  ['hot', 'common', 'cold'].forEach(function(cat) {
+    var catDiseases = grouped[cat];
+    if (!catDiseases || catDiseases.length === 0) return;
+    var config = categoryConfig[cat];
+    
+    html += '<div class="fade-in">';
+    html += '<div class="flex items-center gap-2.5 mb-3">';
+    html += '<span class="w-2.5 h-2.5 rounded-full ' + config.color + '"></span>';
+    html += '<span class="text-base font-semibold text-gray-800">' + config.label + '</span>';
+    html += '<span class="text-xs text-gray-400">（' + config.desc + '，共 ' + catDiseases.length + ' 个）</span>';
+    html += '</div>';
+    
+    html += '<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-1.5">';
+    catDiseases.forEach(function(d, i) {
+      var count = getCount(d, selectedAccount);
+      var level = getCoverageLevel(count);
+      var cov = coverageConfig[level];
+      var delay = Math.min(i * 0.01, 0.5);
+      
+      html += '<button type="button" onclick="openDisease(\'' + d.name.replace(/'/g, "\\'") + '\')" class="disease-card card-in relative rounded-lg border ' + cov.bg + ' ' + cov.border + ' px-2 py-2.5 text-center cursor-pointer" style="animation-delay: ' + delay + 's" title="' + d.name + '：' + cov.label + '（' + count + '篇）">';
+      html += '<div class="text-xs font-medium leading-tight truncate ' + cov.text + '">' + d.name + '</div>';
+      if (count > 0) {
+        html += '<div class="text-[10px] mt-0.5 tabular-nums ' + cov.text + ' opacity-70">' + count + '篇</div>';
+      }
+      html += '</button>';
+    });
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  
+  html += '</div>'; // close flex-col
+  html += '</div>'; // close container
+  html += '</section>'; // close section
+  
+  // Modal
+  if (selectedDisease) {
+    var d = diseases.find(function(d) { return d.name === selectedDisease; });
+    if (d) {
+      var count = getCount(d, selectedAccount);
+      var covInfo = getCoverageInfo(count);
+      var catConfig = categoryConfig[d.category];
+      var accountDetails = [
+        { key: 'yimaitong', label: '医脉通皮肤科', count: d.yimaitong },
+        { key: 'youmai', label: '优麦会讯', count: d.youmai },
+        { key: 'yixuejie', label: '医学界皮肤频道', count: d.yixuejie },
+        { key: 'dingxiangyuan', label: '丁香园皮肤时间', count: d.dingxiangyuan }
+      ];
+      
+      html += '<div class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onclick="closeDisease()">';
+      html += '<div class="modal-content relative bg-white border border-gray-200 rounded-xl shadow-2xl w-full max-w-md overflow-hidden" onclick="event.stopPropagation()">';
+      
+      // Modal header
+      html += '<div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">';
+      html += '<div class="flex items-center gap-2.5">';
+      html += '<span class="w-2.5 h-2.5 rounded-full ' + catConfig.color + '"></span>';
+      html += '<h2 class="text-lg font-semibold text-gray-900">' + d.name + '</h2>';
+      html += '</div>';
+      html += '<button type="button" onclick="closeDisease()" class="text-gray-400 hover:text-gray-600 transition-colors">';
+      html += '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+      html += '</button>';
+      html += '</div>';
+      
+      // Modal body
+      html += '<div class="px-5 py-4 space-y-4">';
+      
+      // Disease info grid
+      html += '<div class="grid grid-cols-2 gap-3">';
+      html += '<div class="bg-gray-50 rounded-lg p-3">';
+      html += '<div class="text-xs text-gray-500 mb-1">疾病热度<span class="font-normal text-gray-400 ml-1">（按全平台总提及）</span></div>';
+      html += '<div class="flex items-center gap-1.5">';
+      html += '<span class="w-2 h-2 rounded-sm ' + catConfig.color + '"></span>';
+      html += '<span class="text-sm font-medium text-gray-800">' + catConfig.label + '</span>';
+      html += '</div>';
+      html += '<div class="text-xs text-gray-500 mt-0.5">' + catConfig.desc + '</div>';
+      html += '</div>';
+      
+      html += '<div class="bg-gray-50 rounded-lg p-3">';
+      html += '<div class="text-xs text-gray-500 mb-1">全平台提及</div>';
+      html += '<div class="text-2xl font-bold tabular-nums text-blue-600">' + d.platformMentions + '</div>';
+      html += '<div class="text-xs text-gray-500">篇</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      // Coverage level
+      html += '<div>';
+      html += '<div class="text-xs text-gray-500 font-medium mb-2">覆盖强度<span class="font-normal text-gray-400 ml-1">（按当前账号发文数）</span></div>';
+      html += '<div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">';
+      html += '<span class="text-sm text-gray-700">' + covInfo.label + '</span>';
+      html += '<div class="flex items-center gap-2">';
+      html += '<span class="text-sm font-semibold tabular-nums text-gray-800 w-8 text-right">' + count + '</span>';
+      html += '<span class="text-xs text-gray-500">篇</span>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      // Per-account details
+      html += '<div>';
+      html += '<div class="text-xs text-gray-500 font-medium mb-2">各账号覆盖详情</div>';
+      html += '<div class="space-y-1.5">';
+      accountDetails.forEach(function(a) {
+        var aCov = getCoverageInfo(a.count);
+        html += '<div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">';
+        html += '<span class="text-sm text-gray-700 truncate flex-1 min-w-0 mr-2">' + a.label + '</span>';
+        html += '<div class="flex items-center gap-2 shrink-0">';
+        html += '<span class="text-xs ' + aCov.color + '">' + aCov.label + '</span>';
+        html += '<span class="text-sm font-semibold tabular-nums text-gray-800 w-8 text-right">' + a.count + '</span>';
+        html += '<span class="text-xs text-gray-500">篇</span>';
+        html += '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+      html += '</div>';
+      
+      html += '</div>'; // close space-y-4
+      
+      // Modal footer
+      html += '<div class="px-5 py-3 border-t border-gray-100 flex justify-end">';
+      html += '<button type="button" onclick="closeDisease()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">关闭</button>';
+      html += '</div>';
+      
+      html += '</div>'; // close modal content
+      html += '</div>'; // close overlay
+    }
+  }
+  
+  root.innerHTML = html;
+}
+
+function selectAccount(key) {
+  selectedAccount = key;
+  render();
+}
+
+function selectCoverage(key) {
+  coverageFilter = key;
+  render();
+}
+
+function openDisease(name) {
+  selectedDisease = name;
+  render();
+}
+
+function closeDisease() {
+  selectedDisease = null;
+  render();
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && selectedDisease) {
+    closeDisease();
+  }
+});
+
+// Initial render
+render();
+</script>
+
+</body>
+</html>
